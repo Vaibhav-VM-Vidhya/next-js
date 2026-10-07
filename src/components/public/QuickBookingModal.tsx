@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Calendar, Clock, User, Phone, CheckCircle2, Sparkles, X, ArrowRight } from 'lucide-react';
+import { Appointment } from '../../types';
+import { downloadAppointmentReceiptImage, generateAppointmentReceiptDataUrl } from '../../utils/receiptGenerator';
+import { Calendar, Clock, User, Phone, CheckCircle2, Sparkles, X, ArrowRight, Download, Check, FileText } from 'lucide-react';
 
 export const QuickBookingModal: React.FC = () => {
-  const { isBookingModalOpen, setIsBookingModalOpen, createAppointment, doctors } = useApp();
+  const { isBookingModalOpen, setIsBookingModalOpen, createAppointment, doctors, clinicInfo } = useApp();
 
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -11,6 +13,8 @@ export const QuickBookingModal: React.FC = () => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [time, setTime] = useState('10:00 AM');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [bookedApt, setBookedApt] = useState<Appointment | null>(null);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
 
   if (!isBookingModalOpen) return null;
 
@@ -30,7 +34,7 @@ export const QuickBookingModal: React.FC = () => {
     e.preventDefault();
     if (!fullName.trim() || !phone.trim()) return;
 
-    createAppointment({
+    const newApt = createAppointment({
       patientName: fullName.trim(),
       patientPhone: phone.trim(),
       doctorId: doctors[0]?.id || 'doc-abhishek',
@@ -42,12 +46,63 @@ export const QuickBookingModal: React.FC = () => {
       notes: 'Booked via website quick appointment portal.',
     });
 
+    setBookedApt(newApt);
     setIsSuccess(true);
+
+    // Auto-download appointment receipt image to customer's device immediately
+    const receiptData = {
+      patientName: newApt.patientName,
+      patientPhone: newApt.patientPhone,
+      doctorName: doctors[0]?.name || 'Dr. Abhishek V. Kamble',
+      doctorQualification: doctors[0]?.qualification || 'BDS, MDS',
+      doctorSpecialization: doctors[0]?.specialization || 'Periodontist & Oral Implantologist',
+      doctorRegistration: doctors[0]?.registration || 'A-43344',
+      service: newApt.service,
+      date: newApt.date,
+      time: newApt.time,
+      referenceId: newApt.id,
+      clinicName: clinicInfo.name,
+      clinicTagline: clinicInfo.tagline,
+      clinicAddress: clinicInfo.address,
+      clinicCity: clinicInfo.city,
+      clinicPhone: clinicInfo.phone,
+      clinicSecondaryPhone: clinicInfo.secondaryPhone,
+    };
+
+    setTimeout(() => {
+      downloadAppointmentReceiptImage(receiptData);
+      setDownloadSuccess(true);
+    }, 300);
+  };
+
+  const handleManualDownload = () => {
+    if (!bookedApt) return;
+    downloadAppointmentReceiptImage({
+      patientName: bookedApt.patientName,
+      patientPhone: bookedApt.patientPhone,
+      doctorName: doctors[0]?.name || 'Dr. Abhishek V. Kamble',
+      doctorQualification: doctors[0]?.qualification || 'BDS, MDS',
+      doctorSpecialization: doctors[0]?.specialization || 'Periodontist & Oral Implantologist',
+      doctorRegistration: doctors[0]?.registration || 'A-43344',
+      service: bookedApt.service,
+      date: bookedApt.date,
+      time: bookedApt.time,
+      referenceId: bookedApt.id,
+      clinicName: clinicInfo.name,
+      clinicTagline: clinicInfo.tagline,
+      clinicAddress: clinicInfo.address,
+      clinicCity: clinicInfo.city,
+      clinicPhone: clinicInfo.phone,
+      clinicSecondaryPhone: clinicInfo.secondaryPhone,
+    });
+    setDownloadSuccess(true);
   };
 
   const handleClose = () => {
     setIsBookingModalOpen(false);
     setIsSuccess(false);
+    setBookedApt(null);
+    setDownloadSuccess(false);
     setFullName('');
     setPhone('');
   };
@@ -63,7 +118,7 @@ export const QuickBookingModal: React.FC = () => {
           >
             <X className="w-5 h-5" />
           </button>
-          <div className="flex items-center space-x-1.5 text-sky-400 text-xs font-bold uppercase tracking-wider mb-1">
+          <div className="flex items-center space-x-1.5 text-teal-400 text-xs font-bold uppercase tracking-wider mb-1">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Fast Appointment Desk</span>
           </div>
@@ -74,27 +129,77 @@ export const QuickBookingModal: React.FC = () => {
         </div>
 
         {isSuccess ? (
-          <div className="p-8 text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 border-4 border-emerald-50 text-emerald-600 flex items-center justify-center mx-auto animate-bounce">
+          <div className="p-6 sm:p-8 text-center space-y-4">
+            <div className="w-14 h-14 rounded-full bg-emerald-100 border-4 border-emerald-50 text-emerald-600 flex items-center justify-center mx-auto animate-bounce">
               <CheckCircle2 className="w-8 h-8" />
             </div>
+
             <div>
-              <h4 className="text-xl font-bold text-slate-900">Appointment Booked!</h4>
-              <p className="text-xs text-slate-500 mt-1">
-                Thank you, <strong className="text-slate-800">{fullName}</strong>. Your visit is scheduled for:
+              <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-700 bg-emerald-100/80 px-2.5 py-0.5 rounded-full">
+                Booking Confirmed
+              </span>
+              <h4 className="text-xl font-bold text-slate-900 mt-1">Appointment Reserved!</h4>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Thank you, <strong className="text-slate-800">{fullName}</strong>. Your consultation has been scheduled.
               </p>
-              <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1 text-slate-700">
-                <p>📅 <strong>{date}</strong> at <strong className="text-sky-700">{time}</strong></p>
-                <p>🦷 {service}</p>
-                <p className="text-[11px] text-slate-400">Classic Smile Dental Care • Charholi Bk., Pune</p>
+            </div>
+
+            {/* Structured Pass Preview Box */}
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs space-y-2 text-left">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                <span className="font-mono text-[11px] font-bold text-teal-800">
+                  REF: #{bookedApt?.id.toUpperCase() || 'CS-APT'}
+                </span>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                  Confirmed
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-slate-700">
+                <div>
+                  <span className="text-[10px] text-slate-400 block font-semibold">DATE & TIME</span>
+                  <strong className="text-slate-900 block">{date} at {time}</strong>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block font-semibold">SPECIALIST</span>
+                  <strong className="text-slate-900 block">Dr. Abhishek V. Kamble</strong>
+                </div>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400 block font-semibold">TREATMENT</span>
+                <strong className="text-teal-700 block">{service}</strong>
               </div>
             </div>
-            <button
-              onClick={handleClose}
-              className="w-full py-2.5 rounded-xl bg-sky-600 text-white font-bold text-xs shadow-md hover:bg-sky-700 transition-colors"
-            >
-              Done
-            </button>
+
+            {/* Auto-download Notice Banner */}
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-left flex items-start space-x-2.5 text-xs text-emerald-900">
+              <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <div>
+                <strong className="font-bold block">Appointment Receipt Auto-Downloaded!</strong>
+                <p className="text-[11px] text-emerald-800 mt-0.5 leading-snug">
+                  An official digital appointment pass (.PNG) has been saved to your device. Keep it handy for your visit!
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-2 pt-1">
+              <button
+                type="button"
+                onClick={handleManualDownload}
+                className="w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-md transition-colors flex items-center justify-center space-x-2 cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download Receipt Image Again (PNG)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleClose}
+                className="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
+              >
+                Close & Return
+              </button>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AppointmentStatus } from '../../types';
+import { downloadAppointmentReceiptImage } from '../../utils/receiptGenerator';
 import {
   Users,
   Calendar,
@@ -13,6 +14,7 @@ import {
   X,
   Phone,
   CheckCircle2,
+  Download,
 } from 'lucide-react';
 
 export const ReceptionDashboard: React.FC = () => {
@@ -85,7 +87,7 @@ export const ReceptionDashboard: React.FC = () => {
 
     const doc = doctors.find((d) => d.id === walkinDoctorId) || doctors[0];
 
-    createAppointment({
+    const newApt = createAppointment({
       patientName: walkinName.trim(),
       patientPhone: walkinPhone.trim(),
       doctorId: doc.id,
@@ -95,6 +97,26 @@ export const ReceptionDashboard: React.FC = () => {
       service: walkinService,
       status: 'checked-in',
       notes: walkinNotes ? `Walk-in: ${walkinNotes}` : 'Walk-in registered at front desk.',
+    });
+
+    // Auto-generate and download official digital pass for the patient
+    downloadAppointmentReceiptImage({
+      patientName: newApt.patientName,
+      patientPhone: newApt.patientPhone,
+      doctorName: doc.name,
+      doctorQualification: doc.qualification,
+      doctorSpecialization: doc.specialization,
+      doctorRegistration: doc.registration || 'A-43344',
+      service: newApt.service,
+      date: newApt.date,
+      time: newApt.time,
+      referenceId: newApt.id,
+      clinicName: clinicInfo.name,
+      clinicTagline: clinicInfo.tagline,
+      clinicAddress: clinicInfo.address,
+      clinicCity: clinicInfo.city,
+      clinicPhone: clinicInfo.phone,
+      clinicSecondaryPhone: clinicInfo.secondaryPhone,
     });
 
     setIsRegisterOpen(false);
@@ -279,6 +301,34 @@ export const ReceptionDashboard: React.FC = () => {
                     </td>
 
                     <td className="px-6 py-3.5 text-right space-x-1.5 whitespace-nowrap">
+                      <button
+                        onClick={() => {
+                          const doc = doctors.find((d) => d.id === apt.doctorId) || doctors[0];
+                          downloadAppointmentReceiptImage({
+                            patientName: apt.patientName,
+                            patientPhone: apt.patientPhone,
+                            doctorName: doc?.name || 'Dr. Abhishek V. Kamble',
+                            doctorQualification: doc?.qualification || 'BDS, MDS',
+                            doctorSpecialization: doc?.specialization || 'Periodontist & Oral Implantologist',
+                            doctorRegistration: doc?.registration || 'A-43344',
+                            service: apt.service,
+                            date: apt.date,
+                            time: apt.time,
+                            referenceId: apt.id,
+                            clinicName: clinicInfo.name,
+                            clinicTagline: clinicInfo.tagline,
+                            clinicAddress: clinicInfo.address,
+                            clinicCity: clinicInfo.city,
+                            clinicPhone: clinicInfo.phone,
+                            clinicSecondaryPhone: clinicInfo.secondaryPhone,
+                          });
+                        }}
+                        className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-teal-700 hover:bg-teal-50 transition-colors cursor-pointer inline-flex items-center"
+                        title="Download Digital Appointment Receipt (PNG)"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </button>
+
                       {apt.status !== 'completed' && (
                         <button
                           onClick={() => {
