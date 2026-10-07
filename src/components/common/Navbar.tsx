@@ -35,8 +35,8 @@ export const Navbar: React.FC = () => {
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center space-x-4">
             <span className="flex items-center space-x-1.5 text-slate-300">
-              <MapPin className="w-3.5 h-3.5 text-sky-400" />
-              <span>{clinicInfo.city}</span>
+              <MapPin className="w-3.5 h-3.5 text-teal-400" />
+              <span>Tanish Orchid, Charholi Bk., Pune</span>
             </span>
             <span className="hidden sm:flex items-center space-x-1.5">
               <Clock className="w-3.5 h-3.5 text-emerald-400" />
@@ -47,10 +47,17 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center space-x-4">
             <a
               href={`tel:${clinicInfo.phone.replace(/\s+/g, '')}`}
-              className="flex items-center space-x-1 text-sky-300 hover:text-white transition-colors"
+              className="flex items-center space-x-1 text-teal-300 hover:text-white transition-colors"
             >
-              <Phone className="w-3 h-3 text-sky-400" />
-              <span>Helpline: {clinicInfo.phone}</span>
+              <Phone className="w-3 h-3 text-teal-400" />
+              <span>{clinicInfo.phone}</span>
+            </a>
+            <span className="text-slate-600 hidden md:inline">|</span>
+            <a
+              href={`tel:${clinicInfo.secondaryPhone.replace(/\s+/g, '')}`}
+              className="hidden md:flex items-center space-x-1 text-slate-300 hover:text-white transition-colors"
+            >
+              <span>{clinicInfo.secondaryPhone}</span>
             </a>
           </div>
         </div>
@@ -63,19 +70,19 @@ export const Navbar: React.FC = () => {
           onClick={() => setActiveView('public-home')}
           className="flex items-center space-x-3 cursor-pointer group select-none"
         >
-          <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-sky-500 to-teal-400 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+          <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-teal-500 to-sky-400 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
             <Sparkles className="w-5 h-5 text-slate-950 font-bold" />
           </div>
           <div>
             <div className="flex items-center space-x-1.5">
-              <span className="font-serif tracking-wider text-xl font-bold text-white">
+              <span className="font-serif tracking-tight text-lg sm:text-xl font-bold text-white">
                 CLASSIC SMILE
               </span>
-              <span className="text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded-sm bg-sky-500/20 text-sky-400 border border-sky-400/30">
-                CLINIC
+              <span className="text-[9px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded-sm bg-teal-500/20 text-teal-300 border border-teal-400/30">
+                DENTAL CARE & IMPLANTS
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 font-sans tracking-wide">
+            <p className="text-[10px] text-teal-300/80 font-sans tracking-wide">
               {clinicInfo.tagline}
             </p>
           </div>

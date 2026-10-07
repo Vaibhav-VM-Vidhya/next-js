@@ -38,7 +38,7 @@ const AppContent: React.FC = () => {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-[11px]">
-            <span>📞 Call / WhatsApp: <strong className="text-slate-200">{clinicInfo.phone}</strong></span>
+            <span>📞 Call / WhatsApp: <strong className="text-slate-200">{clinicInfo.phone}</strong> | <strong className="text-slate-200">{clinicInfo.secondaryPhone}</strong></span>
             <span>⏰ {clinicInfo.openingHours}</span>
           </div>
         </div>

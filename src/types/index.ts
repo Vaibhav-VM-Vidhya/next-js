@@ -31,12 +31,21 @@ export interface StaffUser {
 export interface ClinicInfo {
   name: string;
   tagline: string;
+  clinicType: string;
+  specialization: string;
   address: string;
+  area: string;
   city: string;
   phone: string;
+  secondaryPhone: string;
   email: string;
   openingHours: string;
   mapEmbedUrl: string;
+  mapUrl: string;
+  instagram: string;
+  doctorInstagram: string;
+  rating: number;
+  reviewsCount: number;
 }
 
 export interface Branch {
@@ -56,6 +65,7 @@ export interface Doctor {
   title: string;
   specialization: string;
   qualification: string;
+  registration?: string;
   experienceYears: number;
   avatar: string;
   bio: string;
@@ -64,6 +74,7 @@ export interface Doctor {
   reviewsCount: number;
   isActive: boolean;
   username?: string;
+  instagram?: string;
   branchIds?: string[];
 }
 

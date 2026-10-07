@@ -137,7 +137,7 @@ export const AddReviewModal: React.FC = () => {
                 required
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="Share your experience with Dr. Vaibhav Sharma and the clinic..."
+                placeholder="Share your experience with Dr. Abhishek V. Kamble and Classic Smile Dental Care..."
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-sky-500 focus:outline-hidden leading-relaxed"
               />
             </div>

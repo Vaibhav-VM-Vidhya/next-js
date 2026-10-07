@@ -59,7 +59,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const STORAGE_PREFIX = 'classicsmile_db_';
+const STORAGE_PREFIX = 'classicsmile_v2_';
 
 function loadFromStorage<T>(key: string, fallback: T): T {
   try {

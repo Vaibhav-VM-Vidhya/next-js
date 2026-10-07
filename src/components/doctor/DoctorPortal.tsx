@@ -23,6 +23,7 @@ import {
 
 export const DoctorPortal: React.FC = () => {
   const {
+    clinicInfo,
     currentStaffUser,
     appointments,
     updateAppointmentStatus,
@@ -163,7 +164,8 @@ export const DoctorPortal: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="no-print space-y-6">
       {/* Header Bar */}
       <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
@@ -173,7 +175,7 @@ export const DoctorPortal: React.FC = () => {
           <div>
             <div className="flex items-center space-x-2">
               <h2 className="text-xl font-bold text-slate-900">
-                Doctor Console — {currentStaffUser?.name || 'Dr. Vaibhav Sharma'}
+                Doctor Console — {currentStaffUser?.name || 'Dr. Abhishek V. Kamble'}
               </h2>
               <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
                 Clinic Admin
@@ -242,7 +244,7 @@ export const DoctorPortal: React.FC = () => {
         <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
             <h3 className="font-bold text-sm text-slate-800">
-              Active Appointments for Dr. Vaibhav Sharma
+              Active Appointments for Dr. Abhishek V. Kamble
             </h3>
             <span className="text-xs text-slate-500">
               Select any patient to prepare their prescription or update status
@@ -573,7 +575,7 @@ export const DoctorPortal: React.FC = () => {
                 </div>
 
                 {/* Toggle Login Active / Deactivate */}
-                {doc.id !== 'doc-vaibhav' && (
+                {doc.id !== 'doc-abhishek' && (
                   <button
                     onClick={() => toggleDoctorStatus(doc.id, !doc.isActive)}
                     className={`px-3 py-1.5 rounded-xl font-bold text-[11px] border transition-colors ${
@@ -671,6 +673,98 @@ export const DoctorPortal: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+
+      {/* OFFICIAL PRINTABLE PRESCRIPTION SLIP (Paper / PDF Output) */}
+      <div className="print-only p-8 text-black bg-white max-w-4xl mx-auto font-sans">
+        {/* Letterhead Header */}
+        <div className="border-b-2 border-slate-900 pb-4 flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold font-serif uppercase tracking-tight text-slate-900">
+              {clinicInfo.name}
+            </h1>
+            <p className="text-xs font-semibold text-slate-600 italic">
+              "{clinicInfo.tagline}"
+            </p>
+            <p className="text-[11px] text-slate-600 mt-1 max-w-md">
+              {clinicInfo.address}, {clinicInfo.city}
+            </p>
+            <p className="text-[11px] text-slate-700 mt-0.5">
+              Ph: {clinicInfo.phone} / {clinicInfo.secondaryPhone} | Email: {clinicInfo.email}
+            </p>
+          </div>
+          <div className="text-right">
+            <h2 className="text-lg font-bold text-slate-900">{doctors[0]?.name || 'Dr. Abhishek V. Kamble'}</h2>
+            <p className="text-xs font-semibold text-teal-800">{doctors[0]?.qualification || 'BDS, MDS'}</p>
+            <p className="text-[11px] font-medium text-slate-600">{doctors[0]?.specialization}</p>
+            <p className="text-[11px] font-bold text-slate-700">Reg. No: {doctors[0]?.registration || 'A-43344'}</p>
+          </div>
+        </div>
+
+        {/* Patient and Visit Details */}
+        <div className="my-4 py-2 border-b border-slate-300 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+          <div><strong>Patient:</strong> {selectedApt?.patientName || 'N/A'}</div>
+          <div><strong>Phone:</strong> {selectedApt?.patientPhone || 'N/A'}</div>
+          <div><strong>Date:</strong> {new Date().toLocaleDateString('en-IN')}</div>
+          <div><strong>Diagnosis:</strong> {rxDiagnosis}</div>
+        </div>
+
+        {/* Rx Symbol */}
+        <div className="text-2xl font-serif font-black my-2">℞</div>
+
+        {/* Prescribed Medicines Table */}
+        <table className="w-full text-left text-xs border border-slate-300 mb-6">
+          <thead className="bg-slate-100 border-b border-slate-300">
+            <tr>
+              <th className="p-2 border-r border-slate-300">#</th>
+              <th className="p-2 border-r border-slate-300">Medicine & Formulation</th>
+              <th className="p-2 border-r border-slate-300">Dosage</th>
+              <th className="p-2 border-r border-slate-300">Frequency</th>
+              <th className="p-2 border-r border-slate-300">Duration</th>
+              <th className="p-2">Instructions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {medicines.map((m, idx) => (
+              <tr key={m.id} className="border-b border-slate-200">
+                <td className="p-2 border-r border-slate-300 font-bold">{idx + 1}</td>
+                <td className="p-2 border-r border-slate-300">
+                  <strong className="block">{m.drugName}</strong>
+                  <span className="text-[10px] text-slate-500">{m.genericName}</span>
+                </td>
+                <td className="p-2 border-r border-slate-300">{m.dosage}</td>
+                <td className="p-2 border-r border-slate-300 font-semibold">{m.frequency}</td>
+                <td className="p-2 border-r border-slate-300">{m.duration}</td>
+                <td className="p-2">{m.specialInstructions}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Advice / Notes */}
+        <div className="mb-8 text-xs">
+          <strong className="block font-bold text-slate-800 mb-1">Clinical Advice & Instructions:</strong>
+          <p className="whitespace-pre-line text-slate-700">{rxAdvice}</p>
+          {rxFollowUp && (
+            <p className="mt-2 text-slate-800 font-semibold">
+              Next Follow-Up Date: {rxFollowUp}
+            </p>
+          )}
+        </div>
+
+        {/* Doctor Signature Block */}
+        <div className="mt-16 flex justify-between items-end border-t border-slate-300 pt-4 text-xs">
+          <div className="text-[10px] text-slate-500">
+            * Generated via Classic Smile Dental Care Clinic System.<br />
+            Emergency Contacts: {clinicInfo.phone} | {clinicInfo.secondaryPhone}
+          </div>
+          <div className="text-right">
+            <div className="h-10"></div>
+            <strong className="block text-slate-900">{doctors[0]?.name || 'Dr. Abhishek V. Kamble'}</strong>
+            <span className="text-[11px] text-slate-600">BDS, MDS (Reg. A-43344)</span>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };

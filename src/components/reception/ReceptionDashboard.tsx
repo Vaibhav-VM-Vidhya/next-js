@@ -32,7 +32,7 @@ export const ReceptionDashboard: React.FC = () => {
   const [walkinName, setWalkinName] = useState('');
   const [walkinPhone, setWalkinPhone] = useState('');
   const [walkinService, setWalkinService] = useState('Toothache / Emergency Evaluation');
-  const [walkinDoctorId, setWalkinDoctorId] = useState(doctors[0]?.id || 'doc-vaibhav');
+  const [walkinDoctorId, setWalkinDoctorId] = useState(doctors[0]?.id || 'doc-abhishek');
   const [walkinTime, setWalkinTime] = useState('Immediate / Walk-In');
   const [walkinNotes, setWalkinNotes] = useState('');
 

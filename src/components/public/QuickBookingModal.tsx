@@ -15,15 +15,16 @@ export const QuickBookingModal: React.FC = () => {
   if (!isBookingModalOpen) return null;
 
   const quickServices = [
-    'General Consultation & Checkup',
-    'Severe Toothache / Pain Relief',
+    'Dental Implants & Oral Implantology',
+    'Periodontal / Gum Treatment',
+    'Root Canal Treatment (RCT)',
+    'General Dentistry & Checkup',
+    'Multispeciality Dental Care',
+    'Restorative & Cosmetic Dentistry',
     'Teeth Cleaning & Polishing',
-    'Dental Implant Consultation',
-    'Root Canal Treatment',
-    'Porcelain Veneers / Smile Design',
   ];
 
-  const timeSlots = ['10:00 AM', '11:30 AM', '02:00 PM', '04:30 PM', '06:00 PM', '07:30 PM'];
+  const timeSlots = ['10:00 AM', '11:30 AM', '01:00 PM', '04:00 PM', '06:00 PM', '07:30 PM', '08:30 PM'];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,8 +33,8 @@ export const QuickBookingModal: React.FC = () => {
     createAppointment({
       patientName: fullName.trim(),
       patientPhone: phone.trim(),
-      doctorId: doctors[0]?.id || 'doc-vaibhav',
-      doctorName: doctors[0]?.name || 'Dr. Vaibhav Sharma',
+      doctorId: doctors[0]?.id || 'doc-abhishek',
+      doctorName: doctors[0]?.name || 'Dr. Abhishek V. Kamble',
       date,
       time,
       service,
@@ -68,7 +69,7 @@ export const QuickBookingModal: React.FC = () => {
           </div>
           <h3 className="text-xl font-bold text-white">Book Your Dental Visit</h3>
           <p className="text-xs text-slate-300 mt-0.5">
-            Confirmed directly with Dr. Vaibhav Sharma's clinic desk.
+            Confirmed directly with Dr. Abhishek V. Kamble's clinic desk.
           </p>
         </div>
 
@@ -85,7 +86,7 @@ export const QuickBookingModal: React.FC = () => {
               <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1 text-slate-700">
                 <p>📅 <strong>{date}</strong> at <strong className="text-sky-700">{time}</strong></p>
                 <p>🦷 {service}</p>
-                <p className="text-[11px] text-slate-400">Classic Smile Dental Clinic • FC Road, Pune</p>
+                <p className="text-[11px] text-slate-400">Classic Smile Dental Care • Charholi Bk., Pune</p>
               </div>
             </div>
             <button
