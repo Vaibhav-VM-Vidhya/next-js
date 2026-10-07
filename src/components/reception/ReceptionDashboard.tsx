@@ -360,12 +360,12 @@ export const ReceptionDashboard: React.FC = () => {
                       <button
                         onClick={() => {
                           setSelectedPatientId(apt.patientId);
-                          setActiveView('odontogram');
+                          setActiveView('doctor-chair');
                         }}
                         className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[11px] transition-colors"
-                        title="Open Clinical Odontogram Chart"
+                        title="Send patient to Doctor Station"
                       >
-                        Odontogram
+                        Doctor Desk
                       </button>
                     </td>
                   </tr>

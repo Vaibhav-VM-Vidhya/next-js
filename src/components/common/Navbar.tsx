@@ -3,24 +3,22 @@ import { useApp, AppView } from '../../context/AppContext';
 import {
   Sparkles,
   Calendar,
-  Smile,
-  FileText,
   Globe,
   ClipboardList,
   Phone,
   Clock,
   MapPin,
+  Stethoscope,
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const { activeView, setActiveView, currentBranch } = useApp();
 
   const navItems: { view: AppView; label: string; icon: React.ReactNode }[] = [
-    { view: 'public-home', label: 'Home', icon: <Globe className="w-4 h-4" /> },
+    { view: 'public-home', label: 'Portfolio Website', icon: <Globe className="w-4 h-4" /> },
     { view: 'public-booking', label: 'Book Appointment', icon: <Calendar className="w-4 h-4" /> },
-    { view: 'odontogram', label: 'Dental Odontogram', icon: <Smile className="w-4 h-4" /> },
-    { view: 'appointments', label: 'Appointments & Queue', icon: <ClipboardList className="w-4 h-4" /> },
-    { view: 'prescriptions', label: 'Prescriptions', icon: <FileText className="w-4 h-4" /> },
+    { view: 'reception-desk', label: 'Receptionist Desk', icon: <ClipboardList className="w-4 h-4" /> },
+    { view: 'doctor-chair', label: 'Doctor Desk & Rx', icon: <Stethoscope className="w-4 h-4" /> },
   ];
 
   return (
@@ -45,7 +43,7 @@ export const Navbar: React.FC = () => {
               className="flex items-center space-x-1 text-sky-300 hover:text-white transition-colors"
             >
               <Phone className="w-3 h-3 text-sky-400" />
-              <span>Call Us: +1 (555) 234-8890</span>
+              <span>Emergency / Reception: +1 (555) 234-8890</span>
             </a>
           </div>
         </div>
@@ -77,14 +75,14 @@ export const Navbar: React.FC = () => {
         </div>
 
         {/* Primary Navigation Links */}
-        <nav className="hidden md:flex items-center space-x-1">
+        <nav className="hidden md:flex items-center space-x-1.5">
           {navItems.map((item) => {
             const isActive = activeView === item.view;
             return (
               <button
                 key={item.view}
                 onClick={() => setActiveView(item.view)}
-                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+                className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
                   isActive
                     ? 'bg-sky-600 text-white font-bold shadow-xs'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800'
@@ -97,8 +95,8 @@ export const Navbar: React.FC = () => {
           })}
         </nav>
 
-        {/* Header Action Button */}
-        <div className="flex items-center space-x-3">
+        {/* Fast Action CTA */}
+        <div className="flex items-center space-x-2">
           <button
             onClick={() => setActiveView('public-booking')}
             className="px-4 py-2 rounded-xl bg-linear-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white font-bold text-xs shadow-md transition-all flex items-center space-x-1.5"
@@ -117,8 +115,8 @@ export const Navbar: React.FC = () => {
             <button
               key={item.view}
               onClick={() => setActiveView(item.view)}
-              className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${
-                isActive ? 'bg-sky-600 text-white' : 'text-slate-300 hover:bg-slate-800'
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${
+                isActive ? 'bg-sky-600 text-white font-bold' : 'text-slate-300 hover:bg-slate-800'
               }`}
             >
               {item.icon}

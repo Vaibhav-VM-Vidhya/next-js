@@ -3,9 +3,8 @@ import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/common/Navbar';
 import { PublicHome } from './components/public/PublicHome';
 import { BookingModal } from './components/public/BookingModal';
-import { OdontogramView } from './components/odontogram/OdontogramView';
-import { AppointmentsView } from './components/appointments/AppointmentsView';
-import { PrescriptionManager } from './components/doctor/PrescriptionManager';
+import { ReceptionDashboard } from './components/reception/ReceptionDashboard';
+import { DoctorDesk } from './components/doctor/DoctorDesk';
 
 const AppContent: React.FC = () => {
   const { activeView } = useApp();
@@ -17,14 +16,13 @@ const AppContent: React.FC = () => {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {activeView === 'public-home' && <PublicHome />}
         {activeView === 'public-booking' && <BookingModal />}
-        {activeView === 'odontogram' && <OdontogramView />}
-        {(activeView === 'appointments' || activeView === 'reception-desk' || activeView === 'doctor-chair') && (
-          <AppointmentsView />
+        {activeView === 'reception-desk' && <ReceptionDashboard />}
+        {(activeView === 'doctor-chair' || activeView === 'odontogram' || activeView === 'prescriptions') && (
+          <DoctorDesk />
         )}
-        {activeView === 'prescriptions' && <PrescriptionManager />}
       </main>
 
-      {/* Clean Global Footer */}
+      {/* Global Clean Clinical Footer */}
       <footer className="no-print bg-slate-900 text-slate-400 border-t border-slate-800 text-xs py-8 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
@@ -36,7 +34,7 @@ const AppContent: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center space-x-6 text-[11px]">
-            <span>📞 Emergency: +1 (555) 234-8890</span>
+            <span>📞 Direct Desk: +1 (555) 234-8890</span>
             <span>📍 Suite 400, Platinum Towers, Metropolis</span>
           </div>
         </div>
