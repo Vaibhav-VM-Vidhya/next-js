@@ -1,17 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Appointment } from '../../types';
 import { downloadAppointmentReceiptImage, generateAppointmentReceiptDataUrl } from '../../utils/receiptGenerator';
-import { Calendar, Clock, User, Phone, CheckCircle2, Sparkles, X, ArrowRight, Download, Check, FileText } from 'lucide-react';
+import {
+  getLocalDateString,
+  CLINIC_TIME_SLOTS,
+  isTimeSlotPassedForToday,
+  isSlotBooked,
+} from '../../utils/dateUtils';
+import {
+  Calendar,
+  Clock,
+  User,
+  Phone,
+  CheckCircle2,
+  Sparkles,
+  X,
+  ArrowRight,
+  Download,
+  Check,
+  FileText,
+  AlertCircle,
+} from 'lucide-react';
 
 export const QuickBookingModal: React.FC = () => {
-  const { isBookingModalOpen, setIsBookingModalOpen, createAppointment, doctors, clinicInfo } = useApp();
+  const { isBookingModalOpen, setIsBookingModalOpen, createAppointment, doctors, clinicInfo, appointments } = useApp();
 
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [service, setService] = useState('General Consultation & Checkup');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [time, setTime] = useState('10:00 AM');
+  const [date, setDate] = useState(() => getLocalDateString());
+  const [time, setTime] = useState('11:00 AM');
   const [isSuccess, setIsSuccess] = useState(false);
   const [bookedApt, setBookedApt] = useState<Appointment | null>(null);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
@@ -28,11 +47,30 @@ export const QuickBookingModal: React.FC = () => {
     'Teeth Cleaning & Polishing',
   ];
 
-  const timeSlots = ['10:00 AM', '11:30 AM', '01:00 PM', '04:00 PM', '06:00 PM', '07:30 PM', '08:30 PM'];
+  // Auto-pick first available valid slot when date changes
+  useEffect(() => {
+    const isCurrentSlotInvalid =
+      isTimeSlotPassedForToday(time, date) || isSlotBooked(time, date, appointments);
+
+    if (isCurrentSlotInvalid) {
+      const firstAvailable = CLINIC_TIME_SLOTS.find(
+        (slot) => !isTimeSlotPassedForToday(slot, date) && !isSlotBooked(slot, date, appointments)
+      );
+      if (firstAvailable) {
+        setTime(firstAvailable);
+      }
+    }
+  }, [date, appointments]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !phone.trim()) return;
+
+    // Double check that slot is available
+    if (isSlotBooked(time, date, appointments)) {
+      alert('This time slot was just reserved by another patient. Please pick an alternative available slot.');
+      return;
+    }
 
     const newApt = createAppointment({
       patientName: fullName.trim(),
@@ -42,8 +80,8 @@ export const QuickBookingModal: React.FC = () => {
       date,
       time,
       service,
-      status: 'scheduled',
-      notes: 'Booked via website quick appointment portal.',
+      status: 'pending', // Starts as pending until confirmed by reception desk to avoid fake bookings
+      notes: 'Online patient booking. Pending desk verification.',
     });
 
     setBookedApt(newApt);
@@ -228,8 +266,8 @@ export const QuickBookingModal: React.FC = () => {
                   required
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-sky-500 focus:outline-hidden"
+                  min={getLocalDateString()}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
                 />
               </div>
               <div>
@@ -237,13 +275,19 @@ export const QuickBookingModal: React.FC = () => {
                 <select
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-sky-500 focus:outline-hidden"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
                 >
-                  {timeSlots.map((ts, i) => (
-                    <option key={i} value={ts}>
-                      {ts}
-                    </option>
-                  ))}
+                  {CLINIC_TIME_SLOTS.map((ts) => {
+                    const isPast = isTimeSlotPassedForToday(ts, date);
+                    const isTaken = isSlotBooked(ts, date, appointments);
+                    const disabled = isPast || isTaken;
+
+                    return (
+                      <option key={ts} value={ts} disabled={disabled} className={disabled ? 'text-slate-400 bg-slate-100' : 'text-slate-900'}>
+                        {ts} {isTaken ? '• Booked' : isPast ? '• Passed' : '• Available'}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
             </div>

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { PrescriptionMedicine } from '../../types';
+import { PrescriptionMedicine, AppointmentStatus } from '../../types';
+import { downloadAppointmentReceiptImage } from '../../utils/receiptGenerator';
+import { getLocalDateString } from '../../utils/dateUtils';
 import {
   Stethoscope,
   Calendar,
@@ -20,6 +22,12 @@ import {
   Edit3,
   Sliders,
   RotateCcw,
+  Search,
+  Filter,
+  Download,
+  Check,
+  ChevronRight,
+  UserCheck,
 } from 'lucide-react';
 
 export const DoctorPortal: React.FC = () => {
@@ -41,6 +49,11 @@ export const DoctorPortal: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'appointments' | 'rx' | 'reviews' | 'team'>('appointments');
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string>(appointments[0]?.id || '');
   const [rxSuccess, setRxSuccess] = useState(false);
+
+  // Today's Patients Interactive Filters
+  const [patientSearch, setPatientSearch] = useState('');
+  const [patientStatusFilter, setPatientStatusFilter] = useState<string>('all');
+  const [patientDateFilter, setPatientDateFilter] = useState<string>('today');
 
   // Modals
   const [isAddDoctorOpen, setIsAddDoctorOpen] = useState(false);
@@ -72,9 +85,9 @@ export const DoctorPortal: React.FC = () => {
   // Selected Patient Details
   const selectedApt = appointments.find((a) => a.id === selectedAppointmentId) || appointments[0];
 
-  // Prescription Form State
+  // Prescription Form State - Follow-up is optional/nullable!
   const [rxDiagnosis, setRxDiagnosis] = useState('Dental evaluation & restorative care');
-  const [rxFollowUp, setRxFollowUp] = useState('2026-10-15');
+  const [rxFollowUp, setRxFollowUp] = useState(''); // Nullable / optional by default
   const [rxAdvice, setRxAdvice] = useState(
     '1. Take all medicines strictly after meals.\n2. Maintain gentle oral hygiene and avoid pressure on the treated area.\n3. Lukewarm water gargles with a pinch of salt twice daily starting tomorrow.\n4. Avoid smoking and alcohol during the antibiotic course.'
   );
@@ -166,6 +179,38 @@ export const DoctorPortal: React.FC = () => {
     setCustomInstructions('Take after meals.');
   };
 
+  // Switch to Rx tab and pre-select patient
+  const handleSelectPatientForRx = (apt: any) => {
+    setSelectedAppointmentId(apt.id);
+    if (apt.service) {
+      setRxDiagnosis(apt.service);
+    }
+    setActiveTab('rx');
+  };
+
+  // Download digital appointment slip for patient
+  const handleDownloadPatientSlip = (apt: any) => {
+    const doc = doctors.find((d) => d.id === apt.doctorId) || doctors[0];
+    downloadAppointmentReceiptImage({
+      patientName: apt.patientName,
+      patientPhone: apt.patientPhone,
+      doctorName: doc.name,
+      doctorQualification: doc.qualification,
+      doctorSpecialization: doc.specialization,
+      doctorRegistration: doc.registration || 'A-43344',
+      service: apt.service,
+      date: apt.date,
+      time: apt.time,
+      referenceId: apt.id,
+      clinicName: clinicInfo.name,
+      clinicTagline: clinicInfo.tagline,
+      clinicAddress: clinicInfo.address,
+      clinicCity: clinicInfo.city,
+      clinicPhone: clinicInfo.phone,
+      clinicSecondaryPhone: clinicInfo.secondaryPhone,
+    });
+  };
+
   // Save Rx to Clinic Records
   const handleSaveRx = () => {
     if (!selectedApt) return;
@@ -178,7 +223,7 @@ export const DoctorPortal: React.FC = () => {
       diagnosis: rxDiagnosis,
       medicines,
       advice: rxAdvice.split('\n').filter((l) => l.trim().length > 0),
-      followUpDate: rxFollowUp,
+      followUpDate: rxFollowUp.trim() ? rxFollowUp.trim() : undefined,
     });
 
     setRxSuccess(true);
@@ -204,6 +249,41 @@ export const DoctorPortal: React.FC = () => {
     setIsAddDoctorOpen(false);
     setNewDocName('');
   };
+
+  // Interactive filtering variables
+  const todayStr = getLocalDateString();
+
+  const filteredAppointments = appointments.filter((apt) => {
+    const query = patientSearch.toLowerCase().trim();
+    const matchesSearch =
+      !query ||
+      apt.patientName.toLowerCase().includes(query) ||
+      apt.patientPhone.includes(query) ||
+      apt.service.toLowerCase().includes(query) ||
+      (apt.notes && apt.notes.toLowerCase().includes(query));
+
+    const matchesStatus =
+      patientStatusFilter === 'all' ||
+      (patientStatusFilter === 'confirmed'
+        ? apt.status === 'confirmed' || apt.status === 'scheduled'
+        : apt.status === patientStatusFilter);
+
+    const matchesDate =
+      patientDateFilter === 'all'
+        ? true
+        : patientDateFilter === 'today'
+        ? apt.date === todayStr
+        : apt.date === patientDateFilter;
+
+    return matchesSearch && matchesStatus && matchesDate;
+  });
+
+  const countTodayTotal = appointments.filter((a) => a.date === todayStr).length;
+  const countInChair = appointments.filter((a) => a.status === 'in-chair').length;
+  const countCheckedIn = appointments.filter((a) => a.status === 'checked-in').length;
+  const countConfirmed = appointments.filter((a) => a.status === 'confirmed' || a.status === 'scheduled').length;
+  const countCompletedToday = appointments.filter((a) => a.status === 'completed' && a.date === todayStr).length;
+  const countPending = appointments.filter((a) => a.status === 'pending').length;
 
   return (
     <div className="space-y-6">
@@ -282,110 +362,342 @@ export const DoctorPortal: React.FC = () => {
 
       {/* TAB 1: APPOINTMENTS ROSTER */}
       {activeTab === 'appointments' && (
-        <div className="no-print bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <div>
-              <h3 className="font-bold text-sm text-slate-800">
-                Active Appointments for Dr. Abhishek V. Kamble
-              </h3>
-              <p className="text-xs text-slate-500">
-                Click "Write Rx" to prepare a clinical prescription slip for any patient
-              </p>
-            </div>
-            <span className="text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg">
-              {appointments.length} Consultations Scheduled
-            </span>
+        <div className="no-print space-y-4">
+          {/* Quick Metrics Bar for Doctor's Patient Load */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <button
+              onClick={() => {
+                setPatientDateFilter('today');
+                setPatientStatusFilter('all');
+              }}
+              className="p-4 bg-white border border-slate-200 hover:border-teal-400 rounded-2xl text-left transition-all shadow-xs cursor-pointer group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  Today's Consultations
+                </span>
+                <Calendar className="w-4 h-4 text-slate-400 group-hover:text-teal-600 transition-colors" />
+              </div>
+              <div className="text-2xl font-black text-slate-900 mt-1">{countTodayTotal}</div>
+              <span className="text-[11px] text-teal-700 font-semibold mt-0.5 block">
+                {countCompletedToday} Completed
+              </span>
+            </button>
+
+            <button
+              onClick={() => {
+                setPatientStatusFilter('checked-in');
+              }}
+              className="p-4 bg-white border border-slate-200 hover:border-sky-400 rounded-2xl text-left transition-all shadow-xs cursor-pointer group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  Waiting Lounge
+                </span>
+                <Clock className="w-4 h-4 text-sky-500" />
+              </div>
+              <div className="text-2xl font-black text-sky-600 mt-1">{countCheckedIn}</div>
+              <span className="text-[11px] text-slate-500 mt-0.5 block">Ready for chair</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setPatientStatusFilter('in-chair');
+              }}
+              className="p-4 bg-white border border-slate-200 hover:border-purple-400 rounded-2xl text-left transition-all shadow-xs cursor-pointer group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  In Dental Chair
+                </span>
+                <Stethoscope className="w-4 h-4 text-purple-500" />
+              </div>
+              <div className="text-2xl font-black text-purple-600 mt-1">{countInChair}</div>
+              <span className="text-[11px] text-purple-700 font-semibold mt-0.5 block">Active treatment</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setPatientStatusFilter('confirmed');
+              }}
+              className="p-4 bg-white border border-slate-200 hover:border-teal-400 rounded-2xl text-left transition-all shadow-xs cursor-pointer group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  Confirmed / Booked
+                </span>
+                <CheckCircle2 className="w-4 h-4 text-teal-600" />
+              </div>
+              <div className="text-2xl font-black text-teal-700 mt-1">{countConfirmed}</div>
+              <span className="text-[11px] text-slate-500 mt-0.5 block">
+                {countPending > 0 ? `${countPending} pending verification` : 'Up to date'}
+              </span>
+            </button>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200">
-                <tr>
-                  <th className="px-6 py-3.5">Time</th>
-                  <th className="px-6 py-3.5">Patient Name</th>
-                  <th className="px-6 py-3.5">Contact</th>
-                  <th className="px-6 py-3.5">Procedure / Service</th>
-                  <th className="px-6 py-3.5">Status</th>
-                  <th className="px-6 py-3.5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {appointments.map((apt) => {
-                  const isDone = apt.status === 'completed';
+          {/* Search, Status Filter & Date Range Filter */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center space-x-3 flex-1 min-w-[260px]">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                <input
+                  type="text"
+                  value={patientSearch}
+                  onChange={(e) => setPatientSearch(e.target.value)}
+                  placeholder="Search patient name, phone, symptom, or treatment..."
+                  className="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-hidden font-medium"
+                />
+                {patientSearch && (
+                  <button
+                    onClick={() => setPatientSearch('')}
+                    className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
 
-                  return (
-                    <tr key={apt.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="px-6 py-3.5 font-bold text-slate-900">{apt.time}</td>
-                      <td className="px-6 py-3.5">
-                        <strong className="text-slate-900 font-bold block">{apt.patientName}</strong>
-                        {apt.notes && (
-                          <span className="text-[10px] text-slate-400 italic">{apt.notes}</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-3.5 text-slate-600">{apt.patientPhone}</td>
-                      <td className="px-6 py-3.5 font-medium text-slate-800">{apt.service}</td>
-                      <td className="px-6 py-3.5">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                            isDone
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : apt.status === 'in-chair'
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-teal-100 text-teal-800'
-                          }`}
-                        >
-                          {apt.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-3.5 text-right space-x-1.5">
+              <div className="flex items-center space-x-1.5">
+                <Filter className="w-4 h-4 text-slate-400" />
+                <select
+                  value={patientStatusFilter}
+                  onChange={(e) => setPatientStatusFilter(e.target.value)}
+                  className="text-xs bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 font-medium"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="in-chair">In Chair (Active)</option>
+                  <option value="checked-in">Waiting in Lounge</option>
+                  <option value="confirmed">Confirmed / Scheduled</option>
+                  <option value="pending">Pending Verification</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+
+              <div>
+                <select
+                  value={patientDateFilter}
+                  onChange={(e) => setPatientDateFilter(e.target.value)}
+                  className="text-xs bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 font-medium"
+                >
+                  <option value="today">Today Only ({todayStr})</option>
+                  <option value="all">All Dates Scheduled</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="text-xs font-semibold text-slate-500">
+              Showing <span className="font-bold text-slate-900">{filteredAppointments.length}</span> patient(s)
+            </div>
+          </div>
+
+          {/* Patients Interactive Table */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200">
+                  <tr>
+                    <th className="px-5 py-3.5">Schedule</th>
+                    <th className="px-5 py-3.5">Patient Details</th>
+                    <th className="px-5 py-3.5">Treatment / Complaint</th>
+                    <th className="px-5 py-3.5">Status</th>
+                    <th className="px-5 py-3.5 text-right">Operatory Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredAppointments.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
+                        <AlertCircle className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                        <p className="font-semibold text-slate-600">No appointments found matching your criteria</p>
+                        <p className="text-[11px] text-slate-400 mt-1">Try resetting the search query or status filter</p>
                         <button
                           onClick={() => {
-                            setSelectedAppointmentId(apt.id);
-                            setActiveTab('rx');
+                            setPatientSearch('');
+                            setPatientStatusFilter('all');
+                            setPatientDateFilter('all');
                           }}
-                          className="px-3 py-1.5 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 font-bold text-[11px] transition-colors cursor-pointer"
+                          className="mt-3 px-3 py-1.5 rounded-xl bg-teal-50 text-teal-700 font-bold text-xs hover:bg-teal-100 transition-colors"
                         >
-                          Write Rx
+                          Reset Filters
                         </button>
-
-                        {!isDone ? (
-                          <button
-                            onClick={() => updateAppointmentStatus(apt.id, 'completed')}
-                            className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] shadow-xs cursor-pointer"
-                          >
-                            Mark Completed
-                          </button>
-                        ) : (
-                          <span className="text-emerald-700 font-bold text-[11px] inline-flex items-center space-x-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            <span>Done</span>
-                          </span>
-                        )}
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ) : (
+                    filteredAppointments.map((apt) => {
+                      const isDone = apt.status === 'completed';
+                      const isInChair = apt.status === 'in-chair';
+                      const isPending = apt.status === 'pending';
+
+                      return (
+                        <tr
+                          key={apt.id}
+                          className={`hover:bg-slate-50/80 transition-colors ${
+                            isInChair ? 'bg-purple-50/30' : ''
+                          }`}
+                        >
+                          <td className="px-5 py-3.5">
+                            <span className="font-bold text-slate-900 block">{apt.time}</span>
+                            <span className="text-[11px] text-slate-400 font-mono flex items-center space-x-1 mt-0.5">
+                              <Calendar className="w-3 h-3" />
+                              <span>{apt.date}</span>
+                            </span>
+                          </td>
+
+                          <td className="px-5 py-3.5">
+                            <strong className="text-slate-900 font-bold block text-sm">
+                              {apt.patientName}
+                            </strong>
+                            <div className="flex items-center space-x-2 text-[11px] text-slate-500 mt-0.5">
+                              <span className="flex items-center space-x-1">
+                                <Phone className="w-3 h-3 text-slate-400" />
+                                <span>{apt.patientPhone}</span>
+                              </span>
+                            </div>
+                            {apt.notes && (
+                              <div className="mt-1 text-[11px] text-slate-600 bg-slate-100/80 px-2 py-0.5 rounded-md italic max-w-xs truncate">
+                                "{apt.notes}"
+                              </div>
+                            )}
+                          </td>
+
+                          <td className="px-5 py-3.5">
+                            <span className="font-bold text-slate-800 block">{apt.service}</span>
+                            <span className="text-[11px] text-slate-400">Dr. Abhishek V. Kamble</span>
+                          </td>
+
+                          <td className="px-5 py-3.5">
+                            {isInChair && (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200 animate-pulse flex items-center space-x-1 w-fit">
+                                <Stethoscope className="w-3 h-3" />
+                                <span>In Chair</span>
+                              </span>
+                            )}
+                            {apt.status === 'checked-in' && (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-200">
+                                Waiting in Lounge
+                              </span>
+                            )}
+                            {(apt.status === 'confirmed' || apt.status === 'scheduled') && (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 border border-teal-200">
+                                Confirmed
+                              </span>
+                            )}
+                            {isPending && (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                                Pending Verification
+                              </span>
+                            )}
+                            {isDone && (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                Completed
+                              </span>
+                            )}
+                          </td>
+
+                          <td className="px-5 py-3.5 text-right space-x-1.5 whitespace-nowrap">
+                            {/* Write Rx Button */}
+                            <button
+                              onClick={() => handleSelectPatientForRx(apt)}
+                              className="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-[11px] transition-colors shadow-xs cursor-pointer inline-flex items-center space-x-1"
+                              title="Open prescription pad for this patient"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              <span>Write Rx</span>
+                            </button>
+
+                            {/* Chair control */}
+                            {!isDone && !isInChair && (
+                              <button
+                                onClick={() => updateAppointmentStatus(apt.id, 'in-chair')}
+                                className="px-2.5 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold text-[11px] transition-colors cursor-pointer inline-flex items-center space-x-1"
+                                title="Move patient into operatory chair"
+                              >
+                                <Stethoscope className="w-3.5 h-3.5 text-purple-600" />
+                                <span>To Chair</span>
+                              </button>
+                            )}
+
+                            {/* Complete control */}
+                            {!isDone && isInChair && (
+                              <button
+                                onClick={() => updateAppointmentStatus(apt.id, 'completed')}
+                                className="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] shadow-xs cursor-pointer inline-flex items-center space-x-1"
+                                title="Mark consultation done"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                                <span>Mark Done</span>
+                              </button>
+                            )}
+
+                            {/* Pending Confirm control */}
+                            {isPending && (
+                              <button
+                                onClick={() => updateAppointmentStatus(apt.id, 'confirmed')}
+                                className="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-[11px] transition-colors cursor-pointer"
+                              >
+                                Confirm
+                              </button>
+                            )}
+
+                            {/* Digital Slip Download Button */}
+                            <button
+                              onClick={() => handleDownloadPatientSlip(apt)}
+                              className="px-2.5 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 font-bold text-[11px] transition-colors cursor-pointer inline-flex items-center space-x-1"
+                              title="Download digital appointment pass"
+                            >
+                              <Download className="w-3.5 h-3.5 text-slate-500" />
+                              <span className="hidden sm:inline">Slip</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
       {/* TAB 2: CLINICAL PRESCRIPTION PAD */}
       {activeTab === 'rx' && (
-        <div className="space-y-6">
-          {/* Top Prescription Action Bar (Controls & Switcher - Hidden on Print) */}
-          <div className="no-print bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-              <div className="flex flex-wrap items-center gap-3">
+        <div className="space-y-4">
+          {rxSuccess && (
+            <div className="no-print p-3.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-2xl text-xs flex items-center space-x-2 animate-in fade-in">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <span className="font-medium">
+                Prescription recorded in clinic database successfully! Ready for printing or patient review.
+              </span>
+            </div>
+          )}
+
+          {/* Horizontal Split Layout: Left = Entry Controls, Right = Authentic Letterhead Pad */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* LEFT COLUMN: Data Entry & Action Controls (no-print) */}
+            <div className="no-print lg:col-span-5 space-y-4">
+              {/* Card 1: Patient Selection & Demographics */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3.5 text-xs">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <strong className="text-slate-900 font-bold text-sm flex items-center space-x-1.5">
+                    <User className="w-4 h-4 text-teal-600" />
+                    <span>Patient Consultation</span>
+                  </strong>
+                  <span className="text-[11px] text-slate-400">
+                    {appointments.length} patients in roster
+                  </span>
+                </div>
+
                 <div>
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
-                    Patient Consultation
-                  </label>
+                  <label className="font-bold text-slate-700 block mb-1">Select Patient *</label>
                   <select
                     value={selectedAppointmentId}
-                    onChange={(e) => setSelectedAppointmentId(e.target.value)}
-                    className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-xs text-slate-900"
+                    onChange={(e) => {
+                      setSelectedAppointmentId(e.target.value);
+                      const chosen = appointments.find((a) => a.id === e.target.value);
+                      if (chosen?.service) setRxDiagnosis(chosen.service);
+                    }}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
                   >
                     {appointments.map((a) => (
                       <option key={a.id} value={a.id}>
@@ -395,351 +707,441 @@ export const DoctorPortal: React.FC = () => {
                   </select>
                 </div>
 
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
-                    Age / Gender
-                  </label>
-                  <div className="flex items-center space-x-1.5">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Age</label>
                     <input
                       type="text"
                       value={patientAge}
                       onChange={(e) => setPatientAge(e.target.value)}
-                      placeholder="Age"
-                      className="w-16 px-2 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-center"
+                      placeholder="e.g. 34"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-xs"
                     />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Gender</label>
                     <select
                       value={patientGender}
                       onChange={(e) => setPatientGender(e.target.value)}
-                      className="px-2 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-xs"
                     >
-                      <option value="Male">Male</option>
                       <option value="Female">Female</option>
+                      <option value="Male">Male</option>
                       <option value="Other">Other</option>
                     </select>
                   </div>
                 </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Clinical Diagnosis / Concern *</label>
+                  <input
+                    type="text"
+                    value={rxDiagnosis}
+                    onChange={(e) => setRxDiagnosis(e.target.value)}
+                    placeholder="e.g. Periodontitis & Deep Pocketing, Root Canal Therapy"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium text-xs focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-bold text-slate-700 block">
+                      Next Review / Follow-Up (Optional)
+                    </label>
+                    {rxFollowUp && (
+                      <button
+                        type="button"
+                        onClick={() => setRxFollowUp('')}
+                        className="text-[11px] text-red-600 hover:text-red-700 font-bold cursor-pointer"
+                        title="Remove follow-up date (Set as SOS)"
+                      >
+                        Clear (Set SOS)
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="date"
+                      min={getLocalDateString()}
+                      value={rxFollowUp}
+                      onChange={(e) => setRxFollowUp(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium text-xs focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    {rxFollowUp
+                      ? `Follow-up set for: ${rxFollowUp}`
+                      : 'Optional: Left empty, prints as "SOS / As needed on discomfort"'}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Clinical Advice & Directions</label>
+                  <textarea
+                    rows={3}
+                    value={rxAdvice}
+                    onChange={(e) => setRxAdvice(e.target.value)}
+                    placeholder="Post-op instructions, dietary precautions, oral hygiene..."
+                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs leading-relaxed focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                  />
+                </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAddCustomMedOpen(true)}
-                  className="px-3.5 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 font-bold text-xs flex items-center space-x-1.5 transition-colors cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5 text-teal-600" />
-                  <span>+ Add Medicine</span>
-                </button>
+              {/* Card 2: Quick Pharmacopoeia Buttons */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3 text-xs">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold uppercase tracking-wider text-slate-700 flex items-center space-x-1.5 text-[11px]">
+                    <Sparkles className="w-3.5 h-3.5 text-teal-600" />
+                    <span>Quick Add Pharmacopoeia</span>
+                  </label>
+                  <div className="flex items-center space-x-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddCustomMedOpen(true)}
+                      className="px-2 py-1 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 font-bold text-[10px] transition-colors cursor-pointer flex items-center space-x-1"
+                      title="Add one-off medicine to this slip"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Custom</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsManagePresetsOpen(true)}
+                      className="px-2 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-[10px] transition-colors cursor-pointer flex items-center space-x-1"
+                      title="Manage saved presets"
+                    >
+                      <Sliders className="w-3 h-3" />
+                      <span>Manage</span>
+                    </button>
+                  </div>
+                </div>
 
-                <button
-                  type="button"
-                  onClick={handleClearMedicines}
-                  className="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 font-semibold text-xs flex items-center space-x-1 transition-colors cursor-pointer"
-                  title="Clear all medicines from slip"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Clear</span>
-                </button>
+                <div className="flex flex-wrap gap-1.5">
+                  {quickDrugPresets.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => handleAddPresetToSlip(preset)}
+                      className="px-2.5 py-1.5 rounded-xl border border-slate-200 hover:border-teal-500 bg-slate-50 hover:bg-teal-50/60 text-slate-800 transition-all text-xs font-semibold flex items-center space-x-1 cursor-pointer shadow-2xs"
+                      title={`${preset.genericName} (${preset.dosage})`}
+                    >
+                      <Plus className="w-3 h-3 text-teal-600" />
+                      <span>{preset.drugName}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
+              {/* Card 3: Currently Added Medications on Slip */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3 text-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1.5">
+                    <strong className="text-slate-900 font-bold text-xs">
+                      Medications in Slip ({medicines.length})
+                    </strong>
+                  </div>
+                  {medicines.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleClearMedicines}
+                      className="text-[11px] font-bold text-slate-400 hover:text-red-600 flex items-center space-x-1 transition-colors cursor-pointer"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Clear All</span>
+                    </button>
+                  )}
+                </div>
+
+                {medicines.length === 0 ? (
+                  <p className="text-slate-400 italic text-center py-3 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                    No medicines added yet. Click any Quick Preset above or "+ Custom".
+                  </p>
+                ) : (
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {medicines.map((med, idx) => (
+                      <div
+                        key={med.id}
+                        className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex items-start justify-between gap-2"
+                      >
+                        <div>
+                          <strong className="text-slate-900 font-bold block text-xs">
+                            {idx + 1}. {med.drugName}
+                          </strong>
+                          <span className="text-[10px] text-slate-500 block">
+                            {med.dosage} • {med.frequency} • {med.duration}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMedicine(med.id)}
+                          className="p-1 text-slate-400 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors"
+                          title="Remove medicine"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Card 4: Action Controls */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-wrap gap-2 justify-end">
                 <button
                   type="button"
                   onClick={handleSaveRx}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs flex items-center space-x-1.5 transition-colors cursor-pointer"
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <CheckCircle2 className="w-4 h-4" />
                   <span>Save Record</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs flex items-center space-x-1.5 transition-colors cursor-pointer"
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
                 >
-                  <Printer className="w-3.5 h-3.5 text-teal-400" />
+                  <Printer className="w-4 h-4 text-teal-400" />
                   <span>Print Official Rx</span>
                 </button>
               </div>
             </div>
 
-            {rxSuccess && (
-              <div className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs flex items-center space-x-2 animate-in fade-in">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>Prescription recorded successfully! You can print or download the clean slip anytime.</span>
-              </div>
-            )}
+            {/* RIGHT COLUMN: The Official Authentic Clinical Letterhead (Pad) */}
+            <div className="lg:col-span-7 print:col-span-12 print:w-full">
+              <div className="bg-white border border-slate-300 rounded-3xl p-6 sm:p-10 shadow-xl print:shadow-none print:border-none print:p-2 print:max-w-none print:w-full print:rounded-none">
+                {/* Pad Letterhead Header */}
+                <div className="border-b-2 border-slate-900 pb-5 flex flex-col sm:flex-row justify-between items-start gap-4">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xl sm:text-2xl font-black font-serif uppercase tracking-tight text-slate-950">
+                        {clinicInfo.name}
+                      </span>
+                    </div>
+                    <p className="text-xs font-serif italic text-teal-800 font-semibold mt-0.5">
+                      "{clinicInfo.tagline}"
+                    </p>
+                    <p className="text-[11px] text-slate-600 mt-1 max-w-md leading-relaxed font-sans">
+                      {clinicInfo.address}, {clinicInfo.area}, {clinicInfo.city}
+                    </p>
+                    <p className="text-[11px] text-slate-700 font-sans mt-0.5 font-medium">
+                      Helpline: <strong>{clinicInfo.phone}</strong> | <strong>{clinicInfo.secondaryPhone}</strong>
+                    </p>
+                    <p className="text-[10px] text-slate-500 font-sans">
+                      Email: {clinicInfo.email}
+                    </p>
+                  </div>
 
-            {/* Quick Add Pharmacopoeia Bar with '+' button beside it */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center space-x-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-teal-600" />
-                  <span>Quick Pharmacopoeia (Click to Add):</span>
-                </label>
-                <span className="text-[11px] text-slate-400">
-                  {quickDrugPresets.length} presets configured
-                </span>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                {quickDrugPresets.map((preset) => (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => handleAddPresetToSlip(preset)}
-                    className="px-3 py-1.5 rounded-xl border border-slate-200 hover:border-teal-500 bg-slate-50 hover:bg-teal-50/50 text-slate-800 transition-all text-xs font-medium flex items-center space-x-1.5 cursor-pointer shadow-2xs"
-                    title={`${preset.genericName} (${preset.dosage})`}
-                  >
-                    <Plus className="w-3 h-3 text-teal-600" />
-                    <span className="font-bold">{preset.drugName}</span>
-                    <span className="text-[10px] text-slate-400">({preset.frequency.split(' ')[0]})</span>
-                  </button>
-                ))}
-
-                {/* '+' Button Beside Quick Add to Manage / Update Presets */}
-                <button
-                  type="button"
-                  onClick={() => setIsManagePresetsOpen(true)}
-                  className="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs flex items-center space-x-1 shadow-xs transition-colors cursor-pointer"
-                  title="Add new medicine to Quick-Add menu or remove presets"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add / Manage Presets</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* THE CLINICAL PRESCRIPTION LETTERHEAD SLIP (Authentic Hospital Pad) */}
-          <div className="bg-white border border-slate-300 rounded-3xl p-8 sm:p-12 shadow-xl max-w-4xl mx-auto print:shadow-none print:border-none print:p-4 print:max-w-none print:w-full print:rounded-none">
-            {/* Pad Letterhead Header */}
-            <div className="border-b-2 border-slate-900 pb-5 flex flex-col sm:flex-row justify-between items-start gap-4">
-              <div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-xl sm:text-2xl font-black font-serif uppercase tracking-tight text-slate-950">
-                    {clinicInfo.name}
-                  </span>
+                  {/* Doctor Details */}
+                  <div className="text-left sm:text-right font-sans">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-950">
+                      {doctors[0]?.name || 'Dr. Abhishek V. Kamble'}
+                    </h3>
+                    <p className="text-xs font-bold text-teal-800">
+                      {doctors[0]?.qualification || 'BDS, MDS'}
+                    </p>
+                    <p className="text-[11px] text-slate-600 font-medium">
+                      {doctors[0]?.specialization || 'Periodontist & Oral Implantologist'}
+                    </p>
+                    <p className="text-[11px] font-mono font-bold text-slate-800 mt-0.5">
+                      Reg. No: {doctors[0]?.registration || 'A-43344'}
+                    </p>
+                    <span className="inline-block text-[9px] uppercase font-bold tracking-wider text-teal-700 bg-teal-50 px-2 py-0.5 rounded-sm mt-1 border border-teal-200">
+                      Multispeciality Dental Clinic
+                    </span>
+                  </div>
                 </div>
-                <p className="text-xs font-serif italic text-teal-800 font-semibold mt-0.5">
-                  "{clinicInfo.tagline}"
-                </p>
-                <p className="text-[11px] text-slate-600 mt-1 max-w-md leading-relaxed font-sans">
-                  {clinicInfo.address}, {clinicInfo.area}, {clinicInfo.city}
-                </p>
-                <p className="text-[11px] text-slate-700 font-sans mt-0.5 font-medium">
-                  Helpline: <strong>{clinicInfo.phone}</strong> | <strong>{clinicInfo.secondaryPhone}</strong>
-                </p>
-                <p className="text-[10px] text-slate-500 font-sans">
-                  Email: {clinicInfo.email}
-                </p>
-              </div>
 
-              {/* Doctor Details */}
-              <div className="text-left sm:text-right font-sans">
-                <h3 className="text-base sm:text-lg font-bold text-slate-950">
-                  {doctors[0]?.name || 'Dr. Abhishek V. Kamble'}
-                </h3>
-                <p className="text-xs font-bold text-teal-800">
-                  {doctors[0]?.qualification || 'BDS, MDS'}
-                </p>
-                <p className="text-[11px] text-slate-600 font-medium">
-                  {doctors[0]?.specialization || 'Periodontist & Oral Implantologist'}
-                </p>
-                <p className="text-[11px] font-mono font-bold text-slate-800 mt-0.5">
-                  Reg. No: {doctors[0]?.registration || 'A-43344'}
-                </p>
-                <span className="inline-block text-[9px] uppercase font-bold tracking-wider text-teal-700 bg-teal-50 px-2 py-0.5 rounded-sm mt-1 border border-teal-200">
-                  Multispeciality Dental Clinic
-                </span>
-              </div>
-            </div>
+                {/* Patient & Consultation Metadata Strip */}
+                <div className="my-5 py-3 px-4 bg-slate-50/80 rounded-xl border border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-sans">
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Patient Name</span>
+                    <strong className="text-slate-950 font-bold text-sm block">
+                      {selectedApt?.patientName || 'Consultation Patient'}
+                    </strong>
+                  </div>
 
-            {/* Patient & Consultation Metadata Strip */}
-            <div className="my-5 py-3 px-4 bg-slate-50/80 rounded-xl border border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-sans">
-              <div>
-                <span className="text-[10px] text-slate-400 uppercase font-bold block">Patient Name</span>
-                <strong className="text-slate-950 font-bold text-sm block">
-                  {selectedApt?.patientName || 'Consultation Patient'}
-                </strong>
-              </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Age / Gender</span>
+                    <span className="text-slate-800 font-semibold block">
+                      {patientAge || '—'} Yrs / {patientGender}
+                    </span>
+                  </div>
 
-              <div>
-                <span className="text-[10px] text-slate-400 uppercase font-bold block">Age / Gender</span>
-                <span className="text-slate-800 font-semibold block">
-                  {patientAge} Yrs / {patientGender}
-                </span>
-              </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Date</span>
+                    <span className="text-slate-800 font-semibold block">
+                      {new Date().toLocaleDateString('en-IN', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </span>
+                  </div>
 
-              <div>
-                <span className="text-[10px] text-slate-400 uppercase font-bold block">Date</span>
-                <span className="text-slate-800 font-semibold block">
-                  {new Date().toLocaleDateString('en-IN', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                  })}
-                </span>
-              </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Rx Reference No.</span>
+                    <span className="text-slate-800 font-mono font-bold block">
+                      CS-{selectedApt?.id.replace(/[^0-9]/g, '').slice(-4) || '4392'}
+                    </span>
+                  </div>
+                </div>
 
-              <div>
-                <span className="text-[10px] text-slate-400 uppercase font-bold block">Rx Reference No.</span>
-                <span className="text-slate-800 font-mono font-bold block">
-                  CS-{selectedApt?.id.replace(/[^0-9]/g, '').slice(-4) || '4392'}
-                </span>
-              </div>
-            </div>
-
-            {/* Diagnosis Inline Section */}
-            <div className="mb-4 pb-3 border-b border-slate-200 flex items-center space-x-2 text-xs font-sans">
-              <strong className="text-slate-800 uppercase tracking-wider text-[11px] shrink-0">
-                Diagnosis:
-              </strong>
-              <input
-                type="text"
-                value={rxDiagnosis}
-                onChange={(e) => setRxDiagnosis(e.target.value)}
-                placeholder="Clinical findings / diagnosis"
-                className="w-full bg-transparent border-b border-dashed border-slate-300 focus:border-teal-500 focus:outline-hidden py-0.5 text-slate-800 font-medium"
-              />
-            </div>
-
-            {/* Classic Medical ℞ Symbol */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-3xl font-serif font-black text-slate-900 select-none">
-                ℞
-              </div>
-              <div className="no-print">
-                <button
-                  type="button"
-                  onClick={() => setIsAddCustomMedOpen(true)}
-                  className="text-xs font-bold text-teal-700 hover:text-teal-800 flex items-center space-x-1 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add Medicine</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Prescribed Medicines Table */}
-            <div className="overflow-x-auto mb-6">
-              <table className="w-full text-left text-xs border border-slate-300 font-sans">
-                <thead className="bg-slate-100 text-slate-700 uppercase font-bold tracking-wider text-[10px] border-b border-slate-300">
-                  <tr>
-                    <th className="p-2.5 border-r border-slate-300 w-10 text-center">#</th>
-                    <th className="p-2.5 border-r border-slate-300">Medicine & Salt Formulation</th>
-                    <th className="p-2.5 border-r border-slate-300 w-24">Dosage</th>
-                    <th className="p-2.5 border-r border-slate-300 w-36">Frequency / Timing</th>
-                    <th className="p-2.5 border-r border-slate-300 w-24">Duration</th>
-                    <th className="p-2.5">Instructions</th>
-                    <th className="p-2.5 no-print w-10 text-center"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {medicines.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="p-6 text-center text-slate-400 italic font-sans">
-                        No medications prescribed yet. Click any Quick Preset above or "+ Add Medicine" to prescribe.
-                      </td>
-                    </tr>
-                  ) : (
-                    medicines.map((med, idx) => (
-                      <tr key={med.id} className="hover:bg-slate-50/50">
-                        <td className="p-2.5 border-r border-slate-300 font-bold text-slate-900 text-center">
-                          {idx + 1}
-                        </td>
-                        <td className="p-2.5 border-r border-slate-300">
-                          <strong className="block font-bold text-slate-900 text-sm">
-                            {med.drugName}
-                          </strong>
-                          {med.genericName && (
-                            <span className="text-[10px] text-slate-500 font-sans block">
-                              {med.genericName}
-                            </span>
-                          )}
-                        </td>
-                        <td className="p-2.5 border-r border-slate-300 font-medium text-slate-800">
-                          {med.dosage}
-                        </td>
-                        <td className="p-2.5 border-r border-slate-300 font-bold text-slate-900">
-                          {med.frequency}
-                        </td>
-                        <td className="p-2.5 border-r border-slate-300 font-medium text-slate-800">
-                          {med.duration}
-                        </td>
-                        <td className="p-2.5 text-slate-700">
-                          {med.specialInstructions}
-                        </td>
-                        <td className="p-2.5 no-print text-center">
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveMedicine(med.id)}
-                            className="p-1 text-slate-400 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors"
-                            title="Remove medication"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Clinical Advice & Follow-Up Section */}
-            <div className="space-y-4 pt-2 border-t border-slate-200 font-sans text-xs">
-              <div>
-                <strong className="block font-bold text-slate-900 uppercase tracking-wider text-[11px] mb-1.5">
-                  Advice & Directions:
-                </strong>
-                <textarea
-                  rows={3}
-                  value={rxAdvice}
-                  onChange={(e) => setRxAdvice(e.target.value)}
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 leading-relaxed font-sans print:border-none print:p-0 print:bg-transparent print:resize-none"
-                />
-              </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                <div className="flex items-center space-x-2">
-                  <strong className="text-slate-900 font-bold text-[11px] uppercase tracking-wider">
-                    Next Review / Follow-Up:
+                {/* Diagnosis Inline Section */}
+                <div className="mb-4 pb-3 border-b border-slate-200 flex items-center space-x-2 text-xs font-sans">
+                  <strong className="text-slate-800 uppercase tracking-wider text-[11px] shrink-0">
+                    Diagnosis:
                   </strong>
-                  <input
-                    type="date"
-                    value={rxFollowUp}
-                    onChange={(e) => setRxFollowUp(e.target.value)}
-                    className="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 print:border-none print:p-0 print:bg-transparent"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Signature & Seal Block */}
-            <div className="mt-12 pt-6 border-t-2 border-slate-900 flex justify-between items-end font-sans text-xs">
-              <div className="space-y-1 text-[10px] text-slate-500 max-w-sm">
-                <p className="font-semibold text-slate-700">
-                  * Official Digital Medical Prescription — Classic Smile Dental Care.
-                </p>
-                <p>
-                  For dental emergencies or drug reactions, contact clinic helpline at {clinicInfo.phone} immediately.
-                </p>
-              </div>
-
-              <div className="text-right">
-                <div className="h-12 flex items-center justify-end">
-                  <span className="font-serif italic text-slate-400 text-sm select-none">
-                    [Dr. Abhishek Kamble]
+                  <span className="text-slate-900 font-bold text-xs">
+                    {rxDiagnosis || 'Dental Consultation & Evaluation'}
                   </span>
                 </div>
-                <strong className="block text-slate-950 font-bold text-sm">
-                  {doctors[0]?.name || 'Dr. Abhishek V. Kamble'}
-                </strong>
-                <span className="text-[11px] text-teal-800 font-semibold block">
-                  BDS, MDS (Periodontist & Oral Implantologist)
-                </span>
-                <span className="text-[10px] text-slate-600 font-mono block">
-                  Reg. No: {doctors[0]?.registration || 'A-43344'}
-                </span>
+
+                {/* Classic Medical ℞ Symbol */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-3xl font-serif font-black text-slate-900 select-none">
+                    ℞
+                  </div>
+                  <div className="no-print">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddCustomMedOpen(true)}
+                      className="text-xs font-bold text-teal-700 hover:text-teal-800 flex items-center space-x-1 cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Medicine</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Prescribed Medicines Table */}
+                <div className="overflow-x-auto mb-6">
+                  <table className="w-full text-left text-xs border border-slate-300 font-sans">
+                    <thead className="bg-slate-100 text-slate-700 uppercase font-bold tracking-wider text-[10px] border-b border-slate-300">
+                      <tr>
+                        <th className="p-2.5 border-r border-slate-300 w-10 text-center">#</th>
+                        <th className="p-2.5 border-r border-slate-300">Medicine & Salt Formulation</th>
+                        <th className="p-2.5 border-r border-slate-300 w-24">Dosage</th>
+                        <th className="p-2.5 border-r border-slate-300 w-36">Frequency / Timing</th>
+                        <th className="p-2.5 border-r border-slate-300 w-24">Duration</th>
+                        <th className="p-2.5">Instructions</th>
+                        <th className="p-2.5 no-print w-10 text-center"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {medicines.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="p-6 text-center text-slate-400 italic font-sans">
+                            No medications prescribed yet. Click any Quick Preset on the left or "+ Add Medicine" to prescribe.
+                          </td>
+                        </tr>
+                      ) : (
+                        medicines.map((med, idx) => (
+                          <tr key={med.id} className="hover:bg-slate-50/50">
+                            <td className="p-2.5 border-r border-slate-300 font-bold text-slate-900 text-center">
+                              {idx + 1}
+                            </td>
+                            <td className="p-2.5 border-r border-slate-300">
+                              <strong className="block font-bold text-slate-900 text-sm">
+                                {med.drugName}
+                              </strong>
+                              {med.genericName && (
+                                <span className="text-[10px] text-slate-500 font-sans block">
+                                  {med.genericName}
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-2.5 border-r border-slate-300 font-medium text-slate-800">
+                              {med.dosage}
+                            </td>
+                            <td className="p-2.5 border-r border-slate-300 font-bold text-slate-900">
+                              {med.frequency}
+                            </td>
+                            <td className="p-2.5 border-r border-slate-300 font-medium text-slate-800">
+                              {med.duration}
+                            </td>
+                            <td className="p-2.5 text-slate-700">
+                              {med.specialInstructions}
+                            </td>
+                            <td className="p-2.5 no-print text-center">
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveMedicine(med.id)}
+                                className="p-1 text-slate-400 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors cursor-pointer"
+                                title="Remove medication"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Clinical Advice & Follow-Up Section */}
+                <div className="space-y-4 pt-2 border-t border-slate-200 font-sans text-xs">
+                  <div>
+                    <strong className="block font-bold text-slate-900 uppercase tracking-wider text-[11px] mb-1.5">
+                      Advice & Directions:
+                    </strong>
+                    <div className="p-3 bg-slate-50/60 rounded-xl border border-slate-200/60 text-xs text-slate-800 leading-relaxed font-sans whitespace-pre-line print:border-none print:p-0 print:bg-transparent">
+                      {rxAdvice}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                    <div className="flex items-center space-x-2">
+                      <strong className="text-slate-900 font-bold text-[11px] uppercase tracking-wider">
+                        Next Review / Follow-Up:
+                      </strong>
+                      <span className="text-xs font-bold text-teal-800">
+                        {rxFollowUp ? (
+                          new Date(rxFollowUp).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })
+                        ) : (
+                          <span className="text-slate-600 font-medium italic">
+                            SOS / As needed on discomfort or persistence of symptoms
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Signature & Seal Block */}
+                <div className="mt-12 pt-6 border-t-2 border-slate-900 flex justify-between items-end font-sans text-xs">
+                  <div className="space-y-1 text-[10px] text-slate-500 max-w-sm">
+                    <p className="font-semibold text-slate-700">
+                      * Official Digital Medical Prescription — Classic Smile Dental Care.
+                    </p>
+                    <p>
+                      For dental emergencies or drug reactions, contact clinic helpline at {clinicInfo.phone} immediately.
+                    </p>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="h-12 flex items-center justify-end">
+                      <span className="font-serif italic text-slate-400 text-sm select-none">
+                        [Dr. Abhishek Kamble]
+                      </span>
+                    </div>
+                    <strong className="block text-slate-950 font-bold text-sm">
+                      {doctors[0]?.name || 'Dr. Abhishek V. Kamble'}
+                    </strong>
+                    <span className="text-[11px] text-teal-800 font-semibold block">
+                      BDS, MDS (Periodontist & Oral Implantologist)
+                    </span>
+                    <span className="text-[10px] text-slate-600 font-mono block">
+                      Reg. No: {doctors[0]?.registration || 'A-43344'}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

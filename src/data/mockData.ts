@@ -6,6 +6,7 @@ import {
   PrescriptionMedicine,
   PatientReview,
 } from '../types';
+import { getLocalDateString } from '../utils/dateUtils';
 
 export const CLINIC_INFO: ClinicInfo = {
   name: 'Classic Smile Dental Care & Implant Centre',
@@ -123,12 +124,12 @@ export const INITIAL_APPOINTMENTS: Appointment[] = [
     patientPhone: '+91 97632 11223',
     doctorId: 'doc-abhishek',
     doctorName: 'Dr. Abhishek V. Kamble',
-    date: new Date().toISOString().split('T')[0],
+    date: getLocalDateString(),
     time: '10:30 AM',
     service: 'Dental Implants Consultation',
     status: 'in-chair',
     notes: 'Missing upper first molar. Evaluate ridge bone width and CBCT scan.',
-    createdAt: '2026-10-07 09:30',
+    createdAt: `${getLocalDateString()} 09:30`,
   },
   {
     id: 'apt-102',
@@ -136,12 +137,12 @@ export const INITIAL_APPOINTMENTS: Appointment[] = [
     patientPhone: '+91 98220 55441',
     doctorId: 'doc-abhishek',
     doctorName: 'Dr. Abhishek V. Kamble',
-    date: new Date().toISOString().split('T')[0],
+    date: getLocalDateString(),
     time: '12:00 PM',
     service: 'Periodontal / Gum Treatment',
     status: 'checked-in',
     notes: 'Bleeding gums and localized pocket on lower anteriors.',
-    createdAt: '2026-10-07 10:15',
+    createdAt: `${getLocalDateString()} 10:15`,
   },
   {
     id: 'apt-103',
@@ -149,12 +150,12 @@ export const INITIAL_APPOINTMENTS: Appointment[] = [
     patientPhone: '+91 94225 88990',
     doctorId: 'doc-abhishek',
     doctorName: 'Dr. Abhishek V. Kamble',
-    date: new Date().toISOString().split('T')[0],
+    date: getLocalDateString(),
     time: '04:00 PM',
     service: 'Root Canal Treatment',
-    status: 'scheduled',
+    status: 'confirmed',
     notes: 'Acute pulpitis on tooth 46. Rotary root canal required.',
-    createdAt: '2026-10-07 11:00',
+    createdAt: `${getLocalDateString()} 11:00`,
   },
   {
     id: 'apt-104',
@@ -162,12 +163,12 @@ export const INITIAL_APPOINTMENTS: Appointment[] = [
     patientPhone: '+91 99234 44112',
     doctorId: 'doc-abhishek',
     doctorName: 'Dr. Abhishek V. Kamble',
-    date: new Date().toISOString().split('T')[0],
+    date: getLocalDateString(),
     time: '06:30 PM',
     service: 'Cosmetic Dentistry & Cleaning',
-    status: 'scheduled',
-    notes: 'Dental ultrasonic scaling and smile aesthetic consultation.',
-    createdAt: '2026-10-07 11:45',
+    status: 'pending',
+    notes: 'Website booking: dental ultrasonic scaling and aesthetic consultation.',
+    createdAt: `${getLocalDateString()} 11:45`,
   },
 ];
 

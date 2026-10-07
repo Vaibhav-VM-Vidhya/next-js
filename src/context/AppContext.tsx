@@ -17,6 +17,7 @@ import {
   INITIAL_REVIEWS,
   DEFAULT_DRUG_PRESETS,
 } from '../data/mockData';
+import { getLocalDateString } from '../utils/dateUtils';
 
 export type AppView = 'public-home' | 'public-booking' | 'reception-desk' | 'doctor-chair' | 'doctor-info';
 
@@ -288,7 +289,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...data,
       id: `rx-${Date.now().toString().slice(-5)}`,
       prescriptionNumber: `RX-CS-${Math.floor(1000 + Math.random() * 9000)}`,
-      date: new Date().toISOString().split('T')[0],
+      date: getLocalDateString(),
     };
     setPrescriptions((prev) => [newRx, ...prev]);
     return newRx;

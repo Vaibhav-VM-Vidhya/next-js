@@ -3,6 +3,12 @@ import { useApp } from '../../context/AppContext';
 import { AppointmentStatus } from '../../types';
 import { downloadAppointmentReceiptImage } from '../../utils/receiptGenerator';
 import {
+  getLocalDateString,
+  CLINIC_TIME_SLOTS,
+  isSlotBooked,
+  isTimeSlotPassedForToday,
+} from '../../utils/dateUtils';
+import {
   Users,
   Calendar,
   Clock,
@@ -15,6 +21,8 @@ import {
   Phone,
   CheckCircle2,
   Download,
+  AlertCircle,
+  ShieldAlert,
 } from 'lucide-react';
 
 export const ReceptionDashboard: React.FC = () => {
@@ -31,39 +39,18 @@ export const ReceptionDashboard: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
-  // Clinic Time Slots
-  const clinicSlots = [
-    '10:00 AM',
-    '10:30 AM',
-    '11:00 AM',
-    '11:30 AM',
-    '12:00 PM',
-    '12:30 PM',
-    '01:00 PM',
-    '04:00 PM',
-    '04:30 PM',
-    '05:00 PM',
-    '05:30 PM',
-    '06:00 PM',
-    '06:30 PM',
-    '07:00 PM',
-    '07:30 PM',
-    '08:00 PM',
-    '08:30 PM',
-  ];
-
   // Walk-in form state with structured slots
   const [walkinName, setWalkinName] = useState('');
   const [walkinPhone, setWalkinPhone] = useState('');
   const [walkinService, setWalkinService] = useState('Dental Implants & Consultation');
   const [walkinDoctorId, setWalkinDoctorId] = useState(doctors[0]?.id || 'doc-abhishek');
-  const [walkinDate, setWalkinDate] = useState(new Date().toISOString().split('T')[0]);
+  const [walkinDate, setWalkinDate] = useState(() => getLocalDateString());
   const [walkinSlot, setWalkinSlot] = useState('10:30 AM');
   const [walkinNotes, setWalkinNotes] = useState('');
 
   // Reschedule Modal State
   const [rescheduleTarget, setRescheduleTarget] = useState<any>(null);
-  const [rescheduleDate, setRescheduleDate] = useState(new Date().toISOString().split('T')[0]);
+  const [rescheduleDate, setRescheduleDate] = useState(() => getLocalDateString());
   const [rescheduleSlot, setRescheduleSlot] = useState('11:30 AM');
   const [rescheduleSuccess, setRescheduleSuccess] = useState(false);
 
@@ -76,9 +63,10 @@ export const ReceptionDashboard: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const countPending = appointments.filter((a) => a.status === 'pending').length;
   const countInChair = appointments.filter((a) => a.status === 'in-chair').length;
   const countCheckedIn = appointments.filter((a) => a.status === 'checked-in').length;
-  const countScheduled = appointments.filter((a) => a.status === 'scheduled').length;
+  const countConfirmed = appointments.filter((a) => a.status === 'confirmed' || a.status === 'scheduled').length;
   const countCompleted = appointments.filter((a) => a.status === 'completed').length;
 
   const handleRegisterWalkIn = (e: React.FormEvent) => {
@@ -139,9 +127,22 @@ export const ReceptionDashboard: React.FC = () => {
 
   const getStatusBadge = (status: AppointmentStatus) => {
     switch (status) {
+      case 'pending':
+        return (
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 animate-pulse flex items-center space-x-1 w-fit">
+            <AlertCircle className="w-3 h-3" />
+            <span>Pending Confirmation</span>
+          </span>
+        );
+      case 'confirmed':
+        return (
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 border border-teal-300">
+            Confirmed
+          </span>
+        );
       case 'in-chair':
         return (
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 animate-pulse">
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-300 animate-pulse">
             In Chair
           </span>
         );
@@ -157,6 +158,12 @@ export const ReceptionDashboard: React.FC = () => {
             Completed
           </span>
         );
+      case 'cancelled':
+        return (
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
+            Cancelled / Rejected
+          </span>
+        );
       default:
         return (
           <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-300">
@@ -170,13 +177,29 @@ export const ReceptionDashboard: React.FC = () => {
     <div className="space-y-6">
       {/* Front-Desk Overview Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">In Operatory Chair</span>
-          <div className="text-2xl font-black text-amber-600 mt-1 flex items-center justify-between">
-            <span>{countInChair}</span>
-            <Stethoscope className="w-5 h-5 text-amber-400" />
+        {/* Pending Requests Alert Card */}
+        <div className={`border rounded-2xl p-4 shadow-xs transition-all ${
+          countPending > 0
+            ? 'bg-amber-50/80 border-amber-300 ring-2 ring-amber-300/40'
+            : 'bg-white border-slate-200'
+        }`}>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-800">
+              Pending Requests
+            </span>
+            {countPending > 0 && (
+              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500 text-white animate-pulse">
+                Action Req
+              </span>
+            )}
           </div>
-          <span className="text-[11px] text-slate-500 mt-0.5 block">Active treatment</span>
+          <div className="text-2xl font-black text-amber-700 mt-1 flex items-center justify-between">
+            <span>{countPending}</span>
+            <AlertCircle className="w-5 h-5 text-amber-500" />
+          </div>
+          <span className="text-[11px] text-amber-700 mt-0.5 block font-medium">
+            Online bookings to verify
+          </span>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
@@ -189,21 +212,21 @@ export const ReceptionDashboard: React.FC = () => {
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Scheduled Today</span>
-          <div className="text-2xl font-black text-slate-800 mt-1 flex items-center justify-between">
-            <span>{countScheduled}</span>
-            <Calendar className="w-5 h-5 text-slate-400" />
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">In Operatory Chair</span>
+          <div className="text-2xl font-black text-purple-600 mt-1 flex items-center justify-between">
+            <span>{countInChair}</span>
+            <Stethoscope className="w-5 h-5 text-purple-400" />
           </div>
-          <span className="text-[11px] text-slate-500 mt-0.5 block">Confirmed visits</span>
+          <span className="text-[11px] text-slate-500 mt-0.5 block">Active treatment</span>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Completed Sessions</span>
-          <div className="text-2xl font-black text-emerald-600 mt-1 flex items-center justify-between">
-            <span>{countCompleted}</span>
-            <CheckCircle className="w-5 h-5 text-emerald-400" />
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Confirmed / Scheduled</span>
+          <div className="text-2xl font-black text-teal-700 mt-1 flex items-center justify-between">
+            <span>{countConfirmed}</span>
+            <CheckCircle className="w-5 h-5 text-teal-500" />
           </div>
-          <span className="text-[11px] text-slate-500 mt-0.5 block">Discharged patients</span>
+          <span className="text-[11px] text-slate-500 mt-0.5 block">{countCompleted} completed today</span>
         </div>
       </div>
 
@@ -228,11 +251,13 @@ export const ReceptionDashboard: React.FC = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-700"
             >
-              <option value="all">All Appointments</option>
-              <option value="in-chair">In Chair</option>
+              <option value="all">All Appointments ({appointments.length})</option>
+              <option value="pending">Pending Confirmation ({countPending})</option>
+              <option value="confirmed">Confirmed</option>
               <option value="checked-in">Checked In</option>
-              <option value="scheduled">Scheduled</option>
+              <option value="in-chair">In Chair</option>
               <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled / Rejected</option>
             </select>
           </div>
         </div>
@@ -329,7 +354,29 @@ export const ReceptionDashboard: React.FC = () => {
                         <Download className="w-3.5 h-3.5" />
                       </button>
 
-                      {apt.status !== 'completed' && (
+                      {/* Pending confirmation actions: Confirm or Reject */}
+                      {apt.status === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => updateAppointmentStatus(apt.id, 'confirmed')}
+                            className="px-2.5 py-1 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-bold text-[11px] shadow-xs cursor-pointer inline-flex items-center space-x-1"
+                            title="Confirm online booking and lock operatory slot"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Confirm</span>
+                          </button>
+                          <button
+                            onClick={() => updateAppointmentStatus(apt.id, 'cancelled')}
+                            className="px-2 py-1 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-[11px] transition-colors cursor-pointer"
+                            title="Reject fake or duplicate booking"
+                          >
+                            Reject
+                          </button>
+                        </>
+                      )}
+
+                      {/* Reschedule button (allowed for non-completed and non-cancelled) */}
+                      {apt.status !== 'completed' && apt.status !== 'cancelled' && (
                         <button
                           onClick={() => {
                             setRescheduleTarget(apt);
@@ -343,7 +390,8 @@ export const ReceptionDashboard: React.FC = () => {
                         </button>
                       )}
 
-                      {apt.status === 'scheduled' && (
+                      {/* Check-In allowed for confirmed or scheduled */}
+                      {(apt.status === 'confirmed' || apt.status === 'scheduled') && (
                         <button
                           onClick={() => updateAppointmentStatus(apt.id, 'checked-in')}
                           className="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-bold text-[11px] shadow-xs cursor-pointer"
@@ -355,7 +403,7 @@ export const ReceptionDashboard: React.FC = () => {
                       {apt.status === 'checked-in' && (
                         <button
                           onClick={() => updateAppointmentStatus(apt.id, 'in-chair')}
-                          className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shadow-xs cursor-pointer"
+                          className="px-2.5 py-1 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-[11px] shadow-xs cursor-pointer"
                         >
                           Send to Chair
                         </button>
@@ -374,6 +422,12 @@ export const ReceptionDashboard: React.FC = () => {
                         <span className="text-emerald-700 font-bold text-[11px] inline-flex items-center space-x-1">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           <span>Done</span>
+                        </span>
+                      )}
+
+                      {apt.status === 'cancelled' && (
+                        <span className="text-rose-500 font-bold text-[11px]">
+                          Rejected
                         </span>
                       )}
                     </td>
@@ -410,7 +464,7 @@ export const ReceptionDashboard: React.FC = () => {
                   <input
                     type="date"
                     required
-                    min={new Date().toISOString().split('T')[0]}
+                    min={getLocalDateString()}
                     value={walkinDate}
                     onChange={(e) => setWalkinDate(e.target.value)}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
@@ -429,20 +483,30 @@ export const ReceptionDashboard: React.FC = () => {
               <div>
                 <label className="font-bold text-slate-700 mb-1.5 block">Select Available Time Slot *</label>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 max-h-32 overflow-y-auto p-1.5 bg-slate-50 rounded-xl border border-slate-200">
-                  {clinicSlots.map((slot) => (
-                    <button
-                      key={slot}
-                      type="button"
-                      onClick={() => setWalkinSlot(slot)}
-                      className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all ${
-                        walkinSlot === slot
-                          ? 'bg-teal-600 text-white shadow-xs'
-                          : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      {slot}
-                    </button>
-                  ))}
+                  {CLINIC_TIME_SLOTS.map((slot) => {
+                    const isBooked = isSlotBooked(slot, walkinDate, appointments);
+                    const isPassed = isTimeSlotPassedForToday(slot, walkinDate);
+                    const isDisabled = isBooked || isPassed;
+
+                    return (
+                      <button
+                        key={slot}
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={() => setWalkinSlot(slot)}
+                        className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all ${
+                          walkinSlot === slot
+                            ? 'bg-teal-600 text-white shadow-xs'
+                            : isDisabled
+                            ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed line-through'
+                            : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                        }`}
+                        title={isBooked ? 'Already booked' : isPassed ? 'Time has passed' : 'Available'}
+                      >
+                        {slot}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -580,7 +644,7 @@ export const ReceptionDashboard: React.FC = () => {
                   <input
                     type="date"
                     required
-                    min={new Date().toISOString().split('T')[0]}
+                    min={getLocalDateString()}
                     value={rescheduleDate}
                     onChange={(e) => setRescheduleDate(e.target.value)}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
@@ -591,20 +655,30 @@ export const ReceptionDashboard: React.FC = () => {
                 <div>
                   <label className="font-bold text-slate-700 mb-1.5 block">Select New Time Slot *</label>
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 max-h-36 overflow-y-auto p-1.5 bg-slate-50 rounded-xl border border-slate-200">
-                    {clinicSlots.map((slot) => (
-                      <button
-                        key={slot}
-                        type="button"
-                        onClick={() => setRescheduleSlot(slot)}
-                        className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all ${
-                          rescheduleSlot === slot
-                            ? 'bg-teal-600 text-white shadow-xs'
-                            : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
-                        }`}
-                      >
-                        {slot}
-                      </button>
-                    ))}
+                    {CLINIC_TIME_SLOTS.map((slot) => {
+                      const isBooked = isSlotBooked(slot, rescheduleDate, appointments, rescheduleTarget?.id);
+                      const isPassed = isTimeSlotPassedForToday(slot, rescheduleDate);
+                      const isDisabled = isBooked || isPassed;
+
+                      return (
+                        <button
+                          key={slot}
+                          type="button"
+                          disabled={isDisabled}
+                          onClick={() => setRescheduleSlot(slot)}
+                          className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all ${
+                            rescheduleSlot === slot
+                              ? 'bg-teal-600 text-white shadow-xs'
+                              : isDisabled
+                              ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed line-through'
+                              : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                          }`}
+                          title={isBooked ? 'Already booked' : isPassed ? 'Time has passed' : 'Available'}
+                        >
+                          {slot}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 

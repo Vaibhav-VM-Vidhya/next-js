@@ -99,7 +99,7 @@ export interface Patient {
   totalPaid?: number;
 }
 
-export type AppointmentStatus = 'scheduled' | 'checked-in' | 'in-chair' | 'completed' | 'cancelled' | 'confirmed';
+export type AppointmentStatus = 'pending' | 'confirmed' | 'scheduled' | 'checked-in' | 'in-chair' | 'completed' | 'cancelled';
 
 export interface Appointment {
   id: string;
@@ -141,7 +141,7 @@ export interface Prescription {
   diagnosis: string;
   medicines: PrescriptionMedicine[];
   advice: string[];
-  followUpDate: string;
+  followUpDate?: string;
   patientId?: string;
   patientAge?: number;
   doctorId?: string;
