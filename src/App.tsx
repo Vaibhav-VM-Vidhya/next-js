@@ -4,15 +4,8 @@ import { Navbar } from './components/common/Navbar';
 import { PublicHome } from './components/public/PublicHome';
 import { BookingModal } from './components/public/BookingModal';
 import { OdontogramView } from './components/odontogram/OdontogramView';
-import { ReceptionDashboard } from './components/reception/ReceptionDashboard';
-import { DoctorDashboard } from './components/doctor/DoctorDashboard';
+import { AppointmentsView } from './components/appointments/AppointmentsView';
 import { PrescriptionManager } from './components/doctor/PrescriptionManager';
-import { XrayManager } from './components/doctor/XrayManager';
-import { BillingManager } from './components/billing/BillingManager';
-import { CommunicationsManager } from './components/communications/CommunicationsManager';
-import { InventoryManager } from './components/inventory/InventoryManager';
-import { ClinicAnalytics } from './components/analytics/ClinicAnalytics';
-import { ReviewsManager } from './components/reviews/ReviewsManager';
 
 const AppContent: React.FC = () => {
   const { activeView } = useApp();
@@ -24,17 +17,30 @@ const AppContent: React.FC = () => {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {activeView === 'public-home' && <PublicHome />}
         {activeView === 'public-booking' && <BookingModal />}
-        {activeView === 'reception-desk' && <ReceptionDashboard />}
-        {activeView === 'doctor-chair' && <DoctorDashboard />}
         {activeView === 'odontogram' && <OdontogramView />}
+        {(activeView === 'appointments' || activeView === 'reception-desk' || activeView === 'doctor-chair') && (
+          <AppointmentsView />
+        )}
         {activeView === 'prescriptions' && <PrescriptionManager />}
-        {activeView === 'xrays' && <XrayManager />}
-        {activeView === 'billing' && <BillingManager />}
-        {activeView === 'communications' && <CommunicationsManager />}
-        {activeView === 'inventory' && <InventoryManager />}
-        {activeView === 'analytics' && <ClinicAnalytics />}
-        {activeView === 'reviews' && <ReviewsManager />}
       </main>
+
+      {/* Clean Global Footer */}
+      <footer className="no-print bg-slate-900 text-slate-400 border-t border-slate-800 text-xs py-8 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <span className="font-serif font-bold text-white tracking-wider text-sm">
+              CLASSIC SMILE
+            </span>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Centre for Advanced Dentistry & Oral Surgery • All rights reserved
+            </p>
+          </div>
+          <div className="flex items-center space-x-6 text-[11px]">
+            <span>📞 Emergency: +1 (555) 234-8890</span>
+            <span>📍 Suite 400, Platinum Towers, Metropolis</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

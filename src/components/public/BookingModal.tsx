@@ -197,10 +197,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
           <div className="flex flex-wrap justify-center gap-3 pt-4">
             <button
-              onClick={() => setActiveView('reception-desk')}
+              onClick={() => setActiveView('appointments')}
               className="px-6 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow-md transition-colors"
             >
-              View in Receptionist Queue
+              View in Appointments Queue
             </button>
             <button
               onClick={() => {

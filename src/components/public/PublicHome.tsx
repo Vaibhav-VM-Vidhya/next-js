@@ -94,7 +94,7 @@ export const PublicHome: React.FC = () => {
                 className="px-7 py-3.5 rounded-xl bg-linear-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white font-bold text-sm shadow-lg shadow-sky-500/20 hover:scale-105 transition-all flex items-center space-x-2"
               >
                 <Calendar className="w-4 h-4" />
-                <span>Reserve VIP Consultation</span>
+                <span>Book Appointment</span>
               </button>
 
               <button
@@ -102,7 +102,7 @@ export const PublicHome: React.FC = () => {
                 className="px-6 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-semibold text-sm transition-colors flex items-center space-x-2"
               >
                 <Smile className="w-4 h-4 text-sky-400" />
-                <span>Launch Interactive Odontogram</span>
+                <span>Dental Odontogram</span>
               </button>
 
               <button

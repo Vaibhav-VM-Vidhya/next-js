@@ -39,10 +39,11 @@ import {
 export type AppView =
   | 'public-home'
   | 'public-booking'
+  | 'odontogram'
+  | 'appointments'
+  | 'prescriptions'
   | 'reception-desk'
   | 'doctor-chair'
-  | 'odontogram'
-  | 'prescriptions'
   | 'xrays'
   | 'billing'
   | 'communications'

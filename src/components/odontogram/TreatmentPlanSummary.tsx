@@ -67,7 +67,8 @@ export const TreatmentPlanSummary: React.FC<TreatmentPlanSummaryProps> = ({
       notes: `Generated from Clinical Odontogram Chart for ${patient.fullName}`,
     });
 
-    setActiveView('billing');
+    alert(`Treatment Plan for ${patient.fullName} (₹${(subtotal + taxAmount).toLocaleString('en-IN')}) saved to patient record!`);
+    setActiveView('appointments');
   };
 
   return (
