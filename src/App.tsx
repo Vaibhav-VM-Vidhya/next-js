@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/common/Navbar';

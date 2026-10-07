@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
@@ -12,6 +14,7 @@ import {
   Smile,
   ShieldCheck,
   ChevronRight,
+  ChevronDown,
   MessageSquare,
   ArrowRight,
   Activity,
@@ -19,6 +22,9 @@ import {
   Plus,
   ExternalLink,
   CheckCircle2,
+  HelpCircle,
+  Zap,
+  ShieldAlert,
 } from 'lucide-react';
 
 const InstagramIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
@@ -40,7 +46,68 @@ const InstagramIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4'
 export const PublicHome: React.FC = () => {
   const { clinicInfo, doctors, reviews, setActiveView, setIsBookingModalOpen, setIsReviewModalOpen } = useApp();
   const [sliderPosition, setSliderPosition] = useState(50);
+  const [selectedConcern, setSelectedConcern] = useState(0);
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(0);
+
   const leadDoctor = doctors[0];
+
+  const dentalConcerns = [
+    {
+      id: 0,
+      badge: 'Gums & Pyorrhea',
+      icon: <Sparkles className="w-4 h-4 text-teal-400" />,
+      symptom: 'Bleeding, Swollen Gums or Loose Teeth',
+      diagnosisTitle: 'Periodontal Disease & Gum Inflammation',
+      solution: 'Non-surgical ultrasonic debridement, regenerative bone grafting, and targeted diode laser gum therapy led by specialist Periodontist Dr. Abhishek V. Kamble.',
+      recovery: 'Noticeable reduction in bleeding within 48 to 72 hours.',
+      specialist: 'Dr. Abhishek V. Kamble (MDS Periodontist)',
+      recommendedService: 'Periodontal / Gum Treatment',
+    },
+    {
+      id: 1,
+      badge: 'Tooth Replacement',
+      icon: <ShieldCheck className="w-4 h-4 text-sky-400" />,
+      symptom: 'Missing Tooth or Uncomfortable Denture',
+      diagnosisTitle: 'Tooth Loss & Bone Resorption',
+      solution: 'Permanent German titanium implant fixtures with computer-guided surgical precision, bone augmentation, and lifelike monolithic zirconia ceramic crowns.',
+      recovery: 'Immediate function or 3-month solid osseointegration for lifelong chewing strength.',
+      specialist: 'Oral Implantologist Lead',
+      recommendedService: 'Dental Implants & Oral Implantology',
+    },
+    {
+      id: 2,
+      badge: 'Pain Relief',
+      icon: <Zap className="w-4 h-4 text-amber-400" />,
+      symptom: 'Throbbing Toothache, Cavity or Night Pain',
+      diagnosisTitle: 'Deep Pulp Infection / Acute Pulpitis',
+      solution: 'Rotary microscope-assisted painless Root Canal Treatment (RCT) in single or dual visits, followed by custom CAD/CAM crown placement to save natural tooth structure.',
+      recovery: 'Immediate pain relief upon first session.',
+      specialist: 'Endodontics & Restorative Specialists',
+      recommendedService: 'Root Canal Treatment (RCT)',
+    },
+    {
+      id: 3,
+      badge: 'Smile Makeover',
+      icon: <Smile className="w-4 h-4 text-purple-400" />,
+      symptom: 'Stained, Chipped or Uneven Front Teeth',
+      diagnosisTitle: 'Enamel Discoloration & Aesthetic Asymmetry',
+      solution: 'Ultra-thin porcelain laminates, E-Max veneers, composite artistic bonding, and advanced 1-hour laser teeth whitening with zero sensitivity.',
+      recovery: 'Instant radiant transformation with natural enamel translucency.',
+      specialist: 'Cosmetic & Aesthetic Dental Team',
+      recommendedService: 'Restorative & Cosmetic Dentistry',
+    },
+    {
+      id: 4,
+      badge: 'Preventive Checkup',
+      icon: <Heart className="w-4 h-4 text-pink-400" />,
+      symptom: 'Routine Checkup, Plaque or Bad Breath',
+      diagnosisTitle: 'Calculus Buildup & Preventive Screening',
+      solution: 'Ultrasonic micro-scaling, air-polishing, low-dose digital RVG imaging, enamel remineralization, and customized home oral hygiene guidance.',
+      recovery: 'Leaves teeth feeling ultra-smooth, clean, and fresh immediately.',
+      specialist: 'Preventive Dentistry Team',
+      recommendedService: 'General Dentistry & Checkup',
+    },
+  ];
 
   const treatments = [
     {
@@ -48,42 +115,65 @@ export const PublicHome: React.FC = () => {
       desc: 'Permanent titanium & zirconia tooth replacement with computer-guided surgical precision, bone grafting, and immediate loading options.',
       icon: <ShieldCheck className="w-5 h-5 text-sky-400" />,
       tag: 'Specialist Implant Care',
-      highlight: 'Lifelong Stability',
+      highlight: 'Lifelong Stability & Bone Preservation',
     },
     {
       title: 'Periodontal / Gum Treatment',
       desc: 'Expert care for bleeding gums, pyorrhea, deep pocket scaling, regenerative bone grafts, and advanced laser gum therapy by Dr. Abhishek.',
       icon: <Sparkles className="w-5 h-5 text-teal-400" />,
       tag: 'Periodontist Lead',
-      highlight: 'Save Natural Teeth',
+      highlight: 'Save Natural Teeth from Mobility',
     },
     {
       title: 'Root Canal Treatment (RCT)',
       desc: 'Painless, rotary microscope-assisted endodontics to relieve acute toothaches and seal internal tooth canals with precision crowns.',
       icon: <Activity className="w-5 h-5 text-amber-400" />,
       tag: 'Painless Rotary RCT',
-      highlight: 'Comfortable & Quick',
+      highlight: 'Comfortable, Single-Sitting Option',
     },
     {
       title: 'Multispeciality Dental Care',
       desc: 'Complete multidisciplinary oral care, full mouth reconstruction, orthodontic aligner consultations, and family dental health.',
       icon: <Award className="w-5 h-5 text-indigo-400" />,
       tag: 'Comprehensive Care',
-      highlight: 'All Specialties in One Place',
+      highlight: 'All Dental Specialties Under One Roof',
     },
     {
       title: 'Cosmetic & Aesthetic Dentistry',
       desc: 'Ultra-thin porcelain veneers, smile sculpting, composite bonding, and in-office diode laser teeth whitening for dazzling smiles.',
       icon: <Smile className="w-5 h-5 text-purple-400" />,
       tag: 'Smile Makeover',
-      highlight: 'Natural Translucency',
+      highlight: 'Natural Translucency & Perfect Symmetry',
     },
     {
       title: 'General & Preventive Dentistry',
       desc: 'Routine wellness examinations, ultrasonic scaling, digital RVG low-radiation X-rays, cavity fillings, and pediatric preventive sealants.',
       icon: <Heart className="w-5 h-5 text-pink-400" />,
       tag: 'Preventive Wellness',
-      highlight: 'Your Step towards Wellness',
+      highlight: 'Your Step towards Dental Wellness',
+    },
+  ];
+
+  const faqs = [
+    {
+      question: 'Is dental implant surgery painful at Classic Smile?',
+      answer: 'Not at all. Implant procedures are performed under profound computer-assisted local anesthesia. Most patients report feeling only mild pressure during the procedure. Post-operative discomfort is comparable to a minor tooth extraction and is easily managed with gentle medications.',
+    },
+    {
+      question: 'Why is seeing a Periodontist (Gum Specialist) so critical?',
+      answer: 'Periodontal disease affects the supporting bone and tissue anchoring your teeth. Untreated gum infections cause bone loss, loose teeth, and systemic health risks. Dr. Abhishek V. Kamble has specialized MDS training to arrest infection, regenerate lost tissue, and preserve natural teeth.',
+    },
+    {
+      question: 'How long does a Root Canal Treatment (RCT) usually take?',
+      answer: 'With our advanced rotary endodontic equipment and digital imaging, most root canals can be comfortably completed in a single 45-to-60 minute sitting or two short appointments depending on tooth infection severity.',
+    },
+    {
+      question: 'How often should I get my teeth cleaned and scaled?',
+      answer: 'We recommend professional ultrasonic scaling and polishing every 6 months to remove hardened calculus that regular brushing cannot eliminate. This keeps your breath fresh and completely halts early gingivitis.',
+    },
+    {
+      question: 'Where is the clinic located in Charholi and is parking available?',
+      answer: 'We are situated on the 1st Floor, Shop No. 18, T Wing, Tanish Orchid, Charholi Road, Pune - 412105 (Chovisawadi / Charholi Budruk). Ample customer parking is available within the complex.',
     },
   ];
 
@@ -97,8 +187,8 @@ export const PublicHome: React.FC = () => {
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           <div className="lg:col-span-7 space-y-6">
             <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-teal-300 text-xs font-bold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>{clinicInfo.clinicType}</span>
+              <Sparkles className="w-3.5 h-3.5 text-teal-400" />
+              <span>{clinicInfo.clinicType} • Charholi, Pune</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-black tracking-tight text-white leading-tight">
@@ -110,7 +200,7 @@ export const PublicHome: React.FC = () => {
             </p>
 
             <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-xl">
-              Led by <strong>{leadDoctor?.name}</strong>, BDS, MDS (Periodontist & Oral Implantologist, Reg. No: A-43344). Expert care for painless dental implants, advanced gum treatment, single-sitting root canals, and modern smile makeovers in Charholi Bk., Pune.
+              Led by <strong>{leadDoctor?.name}</strong>, BDS, MDS (Periodontist & Oral Implantologist, Reg. No: A-43344). Expert clinical care for painless dental implants, advanced gum surgery, single-sitting root canals, and modern smile transformations in Charholi Bk., Pune.
             </p>
 
             {/* Quick Action Buttons */}
@@ -120,7 +210,7 @@ export const PublicHome: React.FC = () => {
                 className="px-6 py-3.5 rounded-2xl bg-linear-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white font-bold text-xs sm:text-sm shadow-xl shadow-sky-500/20 hover:scale-105 transition-all flex items-center space-x-2 cursor-pointer"
               >
                 <Calendar className="w-4 h-4" />
-                <span>Book Appointment (Fast & Easy)</span>
+                <span>Book Appointment (Instant Slot)</span>
               </button>
 
               <a
@@ -212,6 +302,102 @@ export const PublicHome: React.FC = () => {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* INTERACTIVE DENTAL CONCERN / SYMPTOM TRIAGE NAVIGATOR */}
+      <section className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-xs space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-teal-50 text-teal-700 text-xs font-bold uppercase mb-2">
+              <Zap className="w-3.5 h-3.5 text-teal-600" />
+              <span>Patient Symptom Checker</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-slate-900">
+              What Dental Concern Are You Experiencing?
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Select your symptom below to discover our recommended clinical solution and expected recovery.
+            </p>
+          </div>
+          <span className="text-xs font-bold text-teal-700 hidden sm:block">
+            Specialist Diagnosis Protocol
+          </span>
+        </div>
+
+        {/* Concern Selector Tabs */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          {dentalConcerns.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setSelectedConcern(c.id)}
+              className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                selectedConcern === c.id
+                  ? 'bg-teal-600 text-white border-teal-600 shadow-md scale-[1.02]'
+                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${
+                  selectedConcern === c.id ? 'bg-teal-700 text-white' : 'bg-white text-slate-600'
+                }`}>
+                  {c.badge}
+                </span>
+                <span className={selectedConcern === c.id ? 'text-white' : ''}>{c.icon}</span>
+              </div>
+              <p className="text-xs font-bold leading-tight line-clamp-2">
+                {c.symptom}
+              </p>
+            </button>
+          ))}
+        </div>
+
+        {/* Selected Concern Clinical Pathway Detail */}
+        {dentalConcerns[selectedConcern] && (
+          <div className="p-6 rounded-2xl bg-linear-to-br from-slate-900 to-slate-950 text-white border border-slate-800 space-y-4 animate-in fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-teal-400 tracking-wider">
+                  Targeted Clinical Pathway
+                </span>
+                <h3 className="text-lg font-bold text-white mt-0.5">
+                  {dentalConcerns[selectedConcern].diagnosisTitle}
+                </h3>
+              </div>
+              <span className="text-xs font-medium text-slate-300 bg-slate-800 px-3 py-1 rounded-full w-fit">
+                Attending: <strong>{dentalConcerns[selectedConcern].specialist}</strong>
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+              <div className="md:col-span-8 space-y-3">
+                <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                  {dentalConcerns[selectedConcern].solution}
+                </p>
+
+                <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300 pt-1">
+                  <div className="flex items-center space-x-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-teal-400" />
+                    <span><strong>Expected Recovery:</strong> {dentalConcerns[selectedConcern].recovery}</span>
+                  </div>
+                  <div className="flex items-center space-x-1.5">
+                    <ShieldCheck className="w-4 h-4 text-sky-400" />
+                    <span>Strict sterilization & zero-pain protocol</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="md:col-span-4 flex justify-end">
+                <button
+                  onClick={() => setIsBookingModalOpen(true)}
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-white font-bold text-xs shadow-lg transition-transform hover:scale-105 flex items-center justify-center space-x-2 cursor-pointer"
+                >
+                  <Calendar className="w-4 h-4" />
+                  <span>Book for This Concern</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* MEET THE DOCTOR SECTION */}
@@ -348,6 +534,63 @@ export const PublicHome: React.FC = () => {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* 4-PILLAR CLINICAL SAFETY & STERILIZATION SHOWCASE */}
+      <section className="bg-linear-to-r from-teal-900 to-slate-900 text-white rounded-3xl p-6 sm:p-10 shadow-xl border border-teal-800/40">
+        <div className="max-w-2xl mb-8">
+          <span className="text-xs font-bold uppercase tracking-widest text-teal-300">
+            Clinical Rigor & Safety
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white mt-1">
+            Why Patients Choose Classic Smile
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-300 mt-1">
+            We adhere strictly to international clinical safety, infection control, and biomaterial biocompatibility standards.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-5 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xs space-y-2">
+            <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-300 flex items-center justify-center">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <h3 className="font-bold text-sm text-white">Class-B Autoclave</h3>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Hospital-grade steam sterilization with individually sealed instrument pouches opened directly in front of each patient.
+            </p>
+          </div>
+
+          <div className="p-5 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xs space-y-2">
+            <div className="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-300 flex items-center justify-center">
+              <Activity className="w-5 h-5" />
+            </div>
+            <h3 className="font-bold text-sm text-white">Digital Low-Dose RVG</h3>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Instant ultra-high-definition sensor X-rays with up to 85% reduced radiation exposure compared to conventional film.
+            </p>
+          </div>
+
+          <div className="p-5 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xs space-y-2">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center">
+              <Zap className="w-5 h-5" />
+            </div>
+            <h3 className="font-bold text-sm text-white">Painless Anesthesia</h3>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Topical pre-numbing gels and fine-gauge needles ensure virtually painless administration before every procedure.
+            </p>
+          </div>
+
+          <div className="p-5 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xs space-y-2">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center">
+              <Award className="w-5 h-5" />
+            </div>
+            <h3 className="font-bold text-sm text-white">Certified Implants</h3>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              100% genuine medical Grade-4 pure titanium and zirconia fixtures with manufacturer traceability passports.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -500,6 +743,54 @@ export const PublicHome: React.FC = () => {
         </div>
       </section>
 
+      {/* FREQUENTLY ASKED QUESTIONS (ACCORDION) */}
+      <section className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-xs space-y-6">
+        <div className="max-w-2xl">
+          <span className="text-xs font-bold uppercase tracking-widest text-teal-600">
+            Patient Information & Queries
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-slate-900 mt-1">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Clear, honest answers to help you prepare for your consultation and dental procedures.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          {faqs.map((faq, index) => {
+            const isOpen = expandedFaq === index;
+            return (
+              <div
+                key={index}
+                className="border border-slate-200 rounded-2xl overflow-hidden transition-colors"
+              >
+                <button
+                  type="button"
+                  onClick={() => setExpandedFaq(isOpen ? null : index)}
+                  className="w-full p-4 sm:p-5 text-left bg-slate-50/50 hover:bg-slate-50 flex items-center justify-between gap-4 font-bold text-xs sm:text-sm text-slate-900 cursor-pointer"
+                >
+                  <span className="flex items-center space-x-2.5">
+                    <HelpCircle className="w-4 h-4 text-teal-600 shrink-0" />
+                    <span>{faq.question}</span>
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${
+                      isOpen ? 'rotate-180 text-teal-600' : ''
+                    }`}
+                  />
+                </button>
+                {isOpen && (
+                  <div className="p-4 sm:p-5 pt-0 bg-slate-50/50 text-xs text-slate-600 leading-relaxed border-t border-slate-100">
+                    {faq.answer}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       {/* REAL CLINIC LOCATION WITH USER-PROVIDED GOOGLE MAPS EMBED & EXACT CONTACT */}
       <section className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm space-y-6">
         <div className="max-w-2xl">
@@ -621,4 +912,3 @@ export const PublicHome: React.FC = () => {
     </div>
   );
 };
-

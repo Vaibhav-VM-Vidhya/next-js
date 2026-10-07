@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Lock, User, KeyRound, ShieldCheck, X, AlertCircle, ArrowRight } from 'lucide-react';
