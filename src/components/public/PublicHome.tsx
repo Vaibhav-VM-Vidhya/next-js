@@ -38,7 +38,7 @@ const InstagramIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4'
 );
 
 export const PublicHome: React.FC = () => {
-  const { clinicInfo, doctors, reviews, setIsBookingModalOpen, setIsReviewModalOpen } = useApp();
+  const { clinicInfo, doctors, reviews, setActiveView, setIsBookingModalOpen, setIsReviewModalOpen } = useApp();
   const [sliderPosition, setSliderPosition] = useState(50);
   const leadDoctor = doctors[0];
 
@@ -141,6 +141,14 @@ export const PublicHome: React.FC = () => {
                 <span>Find on Maps</span>
                 <ExternalLink className="w-3 h-3 text-slate-400" />
               </a>
+
+              <button
+                onClick={() => setActiveView('doctor-info')}
+                className="px-4 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-teal-300 border border-teal-500/30 font-semibold text-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
+              >
+                <Award className="w-4 h-4 text-teal-400" />
+                <span>Doctor Credentials</span>
+              </button>
             </div>
 
             {/* Trust Metrics */}
@@ -195,10 +203,10 @@ export const PublicHome: React.FC = () => {
                   </a>
                 </div>
                 <button
-                  onClick={() => setIsBookingModalOpen(true)}
-                  className="px-3 py-1.5 rounded-lg bg-teal-500 hover:bg-teal-600 text-white font-bold text-[11px] transition-colors"
+                  onClick={() => setActiveView('doctor-info')}
+                  className="px-3 py-1.5 rounded-lg bg-teal-500 hover:bg-teal-600 text-white font-bold text-[11px] transition-colors cursor-pointer"
                 >
-                  Book Consult
+                  Doctor Profile
                 </button>
               </div>
             </div>
@@ -236,6 +244,15 @@ export const PublicHome: React.FC = () => {
                 <CheckCircle2 className="w-4 h-4 text-teal-600 shrink-0" />
                 <span>Multispeciality Dental Team with Highest Sterilization Standards</span>
               </div>
+            </div>
+            <div className="pt-2">
+              <button
+                onClick={() => setActiveView('doctor-info')}
+                className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
+              >
+                <span>View Full Credentials & Academic Profile</span>
+                <ArrowRight className="w-3.5 h-3.5 text-teal-400" />
+              </button>
             </div>
           </div>
 

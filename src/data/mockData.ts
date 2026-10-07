@@ -3,6 +3,7 @@ import {
   Doctor,
   StaffUser,
   Appointment,
+  PrescriptionMedicine,
   PatientReview,
 } from '../types';
 
@@ -206,5 +207,62 @@ export const INITIAL_REVIEWS: PatientReview[] = [
     treatment: 'Multispeciality Dental Care',
     comment: 'Cleanest dental clinic at Tanish Orchid. Excellent diagnosis, reasonable consultation charges, and modern technology. Truly "your step towards dental wellness"!',
     doctorName: 'Dr. Abhishek V. Kamble',
+  },
+];
+
+export const DEFAULT_DRUG_PRESETS: PrescriptionMedicine[] = [
+  {
+    id: 'p-1',
+    drugName: 'Augmentin 625mg',
+    genericName: 'Amoxicillin 500mg + Clavulanic Acid 125mg',
+    dosage: '625mg',
+    frequency: '1-0-1 (Twice daily)',
+    duration: '5 days',
+    specialInstructions: 'Take strictly after meals. Complete full 5-day course.',
+  },
+  {
+    id: 'p-2',
+    drugName: 'Zerodol-SP',
+    genericName: 'Aceclofenac 100mg + Paracetamol 325mg + Serratiopeptidase 15mg',
+    dosage: '1 tab',
+    frequency: '1-0-1 (Twice daily)',
+    duration: '3 days',
+    specialInstructions: 'Take after meals for pain and anti-inflammatory relief.',
+  },
+  {
+    id: 'p-3',
+    drugName: 'Hexidine 0.2% Mouthwash',
+    genericName: 'Chlorhexidine Gluconate 0.2%',
+    dosage: '10ml',
+    frequency: 'Twice daily after brushing',
+    duration: '7 days',
+    specialInstructions: 'Rinse vigorously for 60 seconds. Do not swallow or eat for 30 mins.',
+  },
+  {
+    id: 'p-4',
+    drugName: 'Ketorol DT 10mg',
+    genericName: 'Ketorolac Tromethamine',
+    dosage: '1 tab',
+    frequency: 'SOS (Max 3/day)',
+    duration: '2 days',
+    specialInstructions: 'Dissolve in 1 tablespoon of water. For severe acute toothache.',
+  },
+  {
+    id: 'p-5',
+    drugName: 'Pantocid 40mg',
+    genericName: 'Pantoprazole 40mg',
+    dosage: '40mg',
+    frequency: '1-0-0 (Morning)',
+    duration: '5 days',
+    specialInstructions: 'Take on empty stomach 30 mins before breakfast.',
+  },
+  {
+    id: 'p-6',
+    drugName: 'Chymoral Forte',
+    genericName: 'Trypsin + Chymotrypsin',
+    dosage: '1 tab',
+    frequency: '1-1-1 (Thrice daily)',
+    duration: '3 days',
+    specialInstructions: 'Take 30 mins before meals to reduce surgical & gum swelling.',
   },
 ];

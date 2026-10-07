@@ -6,6 +6,7 @@ import {
   Appointment,
   AppointmentStatus,
   Prescription,
+  PrescriptionMedicine,
   PatientReview,
 } from '../types';
 import {
@@ -14,9 +15,10 @@ import {
   INITIAL_DOCTORS,
   INITIAL_APPOINTMENTS,
   INITIAL_REVIEWS,
+  DEFAULT_DRUG_PRESETS,
 } from '../data/mockData';
 
-export type AppView = 'public-home' | 'public-booking' | 'reception-desk' | 'doctor-chair';
+export type AppView = 'public-home' | 'public-booking' | 'reception-desk' | 'doctor-chair' | 'doctor-info';
 
 interface AppContextType {
   // Navigation & Public Clinic Data
@@ -39,10 +41,16 @@ interface AppContextType {
   appointments: Appointment[];
   createAppointment: (appointment: Omit<Appointment, 'id' | 'createdAt'>) => Appointment;
   updateAppointmentStatus: (id: string, status: AppointmentStatus) => void;
+  rescheduleAppointment: (id: string, newDate: string, newTime: string) => void;
 
   // Prescriptions Management
   prescriptions: Prescription[];
   createPrescription: (prescription: Omit<Prescription, 'id' | 'prescriptionNumber' | 'date'>) => Prescription;
+
+  // Quick Drug Presets (Pharmacopoeia)
+  quickDrugPresets: PrescriptionMedicine[];
+  addQuickDrugPreset: (preset: Omit<PrescriptionMedicine, 'id'>) => void;
+  removeQuickDrugPreset: (id: string) => void;
 
   // Reviews Management
   reviews: PatientReview[];
@@ -55,6 +63,8 @@ interface AppContextType {
   setIsBookingModalOpen: (open: boolean) => void;
   isReviewModalOpen: boolean;
   setIsReviewModalOpen: (open: boolean) => void;
+  isDoctorInfoOpen: boolean;
+  setIsDoctorInfoOpen: (open: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -86,6 +96,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isDoctorInfoOpen, setIsDoctorInfoOpen] = useState(false);
+
+  // Quick Drug Presets (Pharmacopoeia)
+  const [quickDrugPresets, setQuickDrugPresets] = useState<PrescriptionMedicine[]>(() =>
+    loadFromStorage('quick_drug_presets', DEFAULT_DRUG_PRESETS)
+  );
 
   // Staff Users & Auth State
   const [staffUsers, setStaffUsers] = useState<StaffUser[]>(() =>
@@ -121,6 +137,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => saveToStorage('doctors', doctors), [doctors]);
   useEffect(() => saveToStorage('appointments', appointments), [appointments]);
   useEffect(() => saveToStorage('prescriptions', prescriptions), [prescriptions]);
+  useEffect(() => saveToStorage('quick_drug_presets', quickDrugPresets), [quickDrugPresets]);
   useEffect(() => saveToStorage('reviews', reviews), [reviews]);
 
   // Auth Methods
@@ -247,6 +264,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
+  const rescheduleAppointment = (id: string, newDate: string, newTime: string) => {
+    setAppointments((prev) =>
+      prev.map((a) =>
+        a.id === id
+          ? {
+              ...a,
+              date: newDate,
+              time: newTime,
+              status: 'scheduled',
+              notes: a.notes ? `${a.notes} (Rescheduled to ${newDate} ${newTime})` : `Rescheduled to ${newDate} ${newTime}`,
+            }
+          : a
+      )
+    );
+  };
+
   // Prescription Methods
   const createPrescription = (
     data: Omit<Prescription, 'id' | 'prescriptionNumber' | 'date'>
@@ -259,6 +292,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setPrescriptions((prev) => [newRx, ...prev]);
     return newRx;
+  };
+
+  // Quick Drug Preset Methods (Pharmacopoeia Management)
+  const addQuickDrugPreset = (preset: Omit<PrescriptionMedicine, 'id'>) => {
+    const newPreset: PrescriptionMedicine = {
+      ...preset,
+      id: `preset-${Date.now()}`,
+    };
+    setQuickDrugPresets((prev) => [...prev, newPreset]);
+  };
+
+  const removeQuickDrugPreset = (id: string) => {
+    setQuickDrugPresets((prev) => prev.filter((p) => p.id !== id));
   };
 
   // Review Methods
@@ -287,8 +333,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         appointments,
         createAppointment,
         updateAppointmentStatus,
+        rescheduleAppointment,
         prescriptions,
         createPrescription,
+        quickDrugPresets,
+        addQuickDrugPreset,
+        removeQuickDrugPreset,
         reviews,
         addReview,
         isLoginModalOpen,
@@ -297,6 +347,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsBookingModalOpen,
         isReviewModalOpen,
         setIsReviewModalOpen,
+        isDoctorInfoOpen,
+        setIsDoctorInfoOpen,
       }}
     >
       {children}

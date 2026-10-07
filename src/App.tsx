@@ -4,6 +4,7 @@ import { Navbar } from './components/common/Navbar';
 import { PublicHome } from './components/public/PublicHome';
 import { ReceptionDashboard } from './components/reception/ReceptionDashboard';
 import { DoctorPortal } from './components/doctor/DoctorPortal';
+import { DoctorInfoPage } from './components/public/DoctorInfoPage';
 import { LoginModal } from './components/auth/LoginModal';
 import { QuickBookingModal } from './components/public/QuickBookingModal';
 import { AddReviewModal } from './components/public/AddReviewModal';
@@ -17,6 +18,7 @@ const AppContent: React.FC = () => {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {activeView === 'public-home' && <PublicHome />}
+        {activeView === 'doctor-info' && <DoctorInfoPage />}
         {activeView === 'reception-desk' && <ReceptionDashboard />}
         {activeView === 'doctor-chair' && <DoctorPortal />}
       </main>

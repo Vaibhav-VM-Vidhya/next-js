@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { PrescriptionMedicine, Doctor } from '../../types';
+import { PrescriptionMedicine } from '../../types';
 import {
   Stethoscope,
   Calendar,
@@ -13,12 +13,13 @@ import {
   CheckCircle2,
   FileText,
   Star,
-  UserCheck,
-  UserX,
   Phone,
   ShieldCheck,
   AlertCircle,
   X,
+  Edit3,
+  Sliders,
+  RotateCcw,
 } from 'lucide-react';
 
 export const DoctorPortal: React.FC = () => {
@@ -31,13 +32,20 @@ export const DoctorPortal: React.FC = () => {
     addDoctor,
     toggleDoctorStatus,
     createPrescription,
+    quickDrugPresets,
+    addQuickDrugPreset,
+    removeQuickDrugPreset,
     reviews,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'appointments' | 'rx' | 'reviews' | 'team'>('appointments');
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string>(appointments[0]?.id || '');
   const [rxSuccess, setRxSuccess] = useState(false);
+
+  // Modals
   const [isAddDoctorOpen, setIsAddDoctorOpen] = useState(false);
+  const [isManagePresetsOpen, setIsManagePresetsOpen] = useState(false);
+  const [isAddCustomMedOpen, setIsAddCustomMedOpen] = useState(false);
 
   // New Doctor Form State
   const [newDocName, setNewDocName] = useState('');
@@ -45,10 +53,33 @@ export const DoctorPortal: React.FC = () => {
   const [newDocQualification, setNewDocQualification] = useState('BDS, MDS');
   const [newDocFee, setNewDocFee] = useState(700);
 
+  // Quick Preset Management Form State
+  const [presetDrugName, setPresetDrugName] = useState('');
+  const [presetGenericName, setPresetGenericName] = useState('');
+  const [presetDosage, setPresetDosage] = useState('');
+  const [presetFrequency, setPresetFrequency] = useState('1-0-1 (Twice daily)');
+  const [presetDuration, setPresetDuration] = useState('5 days');
+  const [presetInstructions, setPresetInstructions] = useState('Take after meals.');
+
+  // Custom Medicine Form State (for adding directly to the current prescription)
+  const [customDrugName, setCustomDrugName] = useState('');
+  const [customGenericName, setCustomGenericName] = useState('');
+  const [customDosage, setCustomDosage] = useState('1 tab');
+  const [customFrequency, setCustomFrequency] = useState('1-0-1 (Twice daily)');
+  const [customDuration, setCustomDuration] = useState('5 days');
+  const [customInstructions, setCustomInstructions] = useState('Take after meals.');
+
+  // Selected Patient Details
+  const selectedApt = appointments.find((a) => a.id === selectedAppointmentId) || appointments[0];
+
   // Prescription Form State
   const [rxDiagnosis, setRxDiagnosis] = useState('Dental evaluation & restorative care');
   const [rxFollowUp, setRxFollowUp] = useState('2026-10-15');
-  const [rxAdvice, setRxAdvice] = useState('Take medicines strictly after meals.\nMaintain gentle oral hygiene.\nWarm saline rinses twice daily.');
+  const [rxAdvice, setRxAdvice] = useState(
+    '1. Take all medicines strictly after meals.\n2. Maintain gentle oral hygiene and avoid pressure on the treated area.\n3. Lukewarm water gargles with a pinch of salt twice daily starting tomorrow.\n4. Avoid smoking and alcohol during the antibiotic course.'
+  );
+  const [patientAge, setPatientAge] = useState('34');
+  const [patientGender, setPatientGender] = useState('Female');
   const [medicines, setMedicines] = useState<PrescriptionMedicine[]>([
     {
       id: 'm1',
@@ -57,7 +88,7 @@ export const DoctorPortal: React.FC = () => {
       dosage: '625mg',
       frequency: '1-0-1 (Twice daily)',
       duration: '5 days',
-      specialInstructions: 'Take after meals. Complete full 5-day course.',
+      specialInstructions: 'Take strictly after meals. Complete full 5-day course.',
     },
     {
       id: 'm2',
@@ -66,57 +97,18 @@ export const DoctorPortal: React.FC = () => {
       dosage: '1 tab',
       frequency: '1-0-1 (Twice daily)',
       duration: '3 days',
-      specialInstructions: 'For pain and swelling relief.',
+      specialInstructions: 'Take after meals for pain and swelling relief.',
     },
   ]);
 
-  const dentalPresets = [
-    {
-      drugName: 'Augmentin 625mg',
-      genericName: 'Amoxicillin + Clavulanic Acid',
-      dosage: '625mg',
-      frequency: '1-0-1 (Twice daily)',
-      duration: '5 days',
-      specialInstructions: 'Take after meals. Complete full course.',
-    },
-    {
-      drugName: 'Zerodol-SP',
-      genericName: 'Aceclofenac + Paracetamol + Serratiopeptidase',
-      dosage: '1 tab',
-      frequency: '1-0-1 (Twice daily)',
-      duration: '3 days',
-      specialInstructions: 'Take after food for pain/inflammation.',
-    },
-    {
-      drugName: 'Hexidine 0.2%',
-      genericName: 'Chlorhexidine Gluconate 0.2%',
-      dosage: '10ml',
-      frequency: 'Twice daily after brushing',
-      duration: '7 days',
-      specialInstructions: 'Rinse for 60 seconds. Do not swallow.',
-    },
-    {
-      drugName: 'Ketorol DT 10mg',
-      genericName: 'Ketorolac Tromethamine',
-      dosage: '10mg',
-      frequency: 'SOS (As needed for acute pain)',
-      duration: '3 days',
-      specialInstructions: 'Disperse in 1 tablespoon of water.',
-    },
-    {
-      drugName: 'Pan-D',
-      genericName: 'Pantoprazole + Domperidone',
-      dosage: '1 cap',
-      frequency: '1-0-0 (Morning empty stomach)',
-      duration: '5 days',
-      specialInstructions: 'Take 30 minutes before breakfast.',
-    },
-  ];
-
-  const handleAddMedicine = (med: typeof dentalPresets[0]) => {
+  // Handlers for medicines
+  const handleAddPresetToSlip = (preset: PrescriptionMedicine) => {
     setMedicines((prev) => [
       ...prev,
-      { ...med, id: `med-${Date.now()}-${Math.random().toString(36).substr(2, 4)}` },
+      {
+        ...preset,
+        id: `med-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      },
     ]);
   };
 
@@ -124,8 +116,57 @@ export const DoctorPortal: React.FC = () => {
     setMedicines((prev) => prev.filter((m) => m.id !== id));
   };
 
-  const selectedApt = appointments.find((a) => a.id === selectedAppointmentId) || appointments[0];
+  const handleClearMedicines = () => {
+    setMedicines([]);
+  };
 
+  // Handler for adding a new preset to the Quick-Add pharmacopoeia
+  const handleSaveNewPreset = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!presetDrugName.trim()) return;
+
+    addQuickDrugPreset({
+      drugName: presetDrugName.trim(),
+      genericName: presetGenericName.trim() || 'Dental formulation',
+      dosage: presetDosage.trim() || 'As directed',
+      frequency: presetFrequency.trim() || '1-0-1',
+      duration: presetDuration.trim() || '5 days',
+      specialInstructions: presetInstructions.trim() || 'Take after meals',
+    });
+
+    setPresetDrugName('');
+    setPresetGenericName('');
+    setPresetDosage('');
+  };
+
+  // Handler for adding a custom medicine directly onto the current prescription slip
+  const handleAddCustomMedicineToSlip = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customDrugName.trim()) return;
+
+    setMedicines((prev) => [
+      ...prev,
+      {
+        id: `med-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        drugName: customDrugName.trim(),
+        genericName: customGenericName.trim() || 'Dental formulation',
+        dosage: customDosage.trim() || '1 tab',
+        frequency: customFrequency.trim() || '1-0-1',
+        duration: customDuration.trim() || '5 days',
+        specialInstructions: customInstructions.trim() || 'Take after meals',
+      },
+    ]);
+
+    setIsAddCustomMedOpen(false);
+    setCustomDrugName('');
+    setCustomGenericName('');
+    setCustomDosage('1 tab');
+    setCustomFrequency('1-0-1 (Twice daily)');
+    setCustomDuration('5 days');
+    setCustomInstructions('Take after meals.');
+  };
+
+  // Save Rx to Clinic Records
   const handleSaveRx = () => {
     if (!selectedApt) return;
     const currentDoc = doctors[0];
@@ -141,9 +182,10 @@ export const DoctorPortal: React.FC = () => {
     });
 
     setRxSuccess(true);
-    setTimeout(() => setRxSuccess(false), 2500);
+    setTimeout(() => setRxSuccess(false), 3000);
   };
 
+  // Add Doctor Handler
   const handleCreateDoctor = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDocName.trim()) return;
@@ -164,12 +206,11 @@ export const DoctorPortal: React.FC = () => {
   };
 
   return (
-    <>
-      <div className="no-print space-y-6">
-      {/* Header Bar */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+    <div className="space-y-6">
+      {/* Console Header Bar (Hidden on Print) */}
+      <div className="no-print bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-600 flex items-center justify-center font-bold">
+          <div className="w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-teal-600 flex items-center justify-center font-bold">
             <Stethoscope className="w-6 h-6" />
           </div>
           <div>
@@ -177,45 +218,45 @@ export const DoctorPortal: React.FC = () => {
               <h2 className="text-xl font-bold text-slate-900">
                 Doctor Console — {currentStaffUser?.name || 'Dr. Abhishek V. Kamble'}
               </h2>
-              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                Clinic Admin
+              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 border border-teal-200">
+                MDS Specialist
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Operatory appointments, digital prescriptions, patient reviews, and doctor profiles
+              Periodontics & Oral Implantology • Reg. No: A-43344
             </p>
           </div>
         </div>
 
-        {/* 4 Main Tabs */}
-        <div className="bg-slate-100 p-1 rounded-2xl flex space-x-1 text-xs font-bold">
+        {/* Console Navigation Tabs */}
+        <div className="bg-slate-100 p-1 rounded-2xl flex flex-wrap gap-1 text-xs font-bold">
           <button
             onClick={() => setActiveTab('appointments')}
-            className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 ${
+            className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer ${
               activeTab === 'appointments'
-                ? 'bg-white text-sky-700 shadow-xs'
+                ? 'bg-white text-teal-700 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Calendar className="w-3.5 h-3.5" />
-            <span>Today's Appointments ({appointments.length})</span>
+            <span>Today's Patients ({appointments.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('rx')}
-            className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 ${
+            className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer ${
               activeTab === 'rx'
                 ? 'bg-white text-emerald-700 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <FileText className="w-3.5 h-3.5" />
-            <span>Prescription Pad</span>
+            <span>Clinical Prescription Pad</span>
           </button>
 
           <button
             onClick={() => setActiveTab('reviews')}
-            className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 ${
+            className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer ${
               activeTab === 'reviews'
                 ? 'bg-white text-amber-700 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
@@ -227,7 +268,7 @@ export const DoctorPortal: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('team')}
-            className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 ${
+            className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer ${
               activeTab === 'team'
                 ? 'bg-white text-purple-700 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
@@ -241,13 +282,18 @@ export const DoctorPortal: React.FC = () => {
 
       {/* TAB 1: APPOINTMENTS ROSTER */}
       {activeTab === 'appointments' && (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+        <div className="no-print bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <h3 className="font-bold text-sm text-slate-800">
-              Active Appointments for Dr. Abhishek V. Kamble
-            </h3>
-            <span className="text-xs text-slate-500">
-              Select any patient to prepare their prescription or update status
+            <div>
+              <h3 className="font-bold text-sm text-slate-800">
+                Active Appointments for Dr. Abhishek V. Kamble
+              </h3>
+              <p className="text-xs text-slate-500">
+                Click "Write Rx" to prepare a clinical prescription slip for any patient
+              </p>
+            </div>
+            <span className="text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg">
+              {appointments.length} Consultations Scheduled
             </span>
           </div>
 
@@ -258,7 +304,7 @@ export const DoctorPortal: React.FC = () => {
                   <th className="px-6 py-3.5">Time</th>
                   <th className="px-6 py-3.5">Patient Name</th>
                   <th className="px-6 py-3.5">Contact</th>
-                  <th className="px-6 py-3.5">Treatment Requested</th>
+                  <th className="px-6 py-3.5">Procedure / Service</th>
                   <th className="px-6 py-3.5">Status</th>
                   <th className="px-6 py-3.5 text-right">Actions</th>
                 </tr>
@@ -285,7 +331,7 @@ export const DoctorPortal: React.FC = () => {
                               ? 'bg-emerald-100 text-emerald-800'
                               : apt.status === 'in-chair'
                               ? 'bg-amber-100 text-amber-800'
-                              : 'bg-sky-100 text-sky-800'
+                              : 'bg-teal-100 text-teal-800'
                           }`}
                         >
                           {apt.status}
@@ -297,7 +343,7 @@ export const DoctorPortal: React.FC = () => {
                             setSelectedAppointmentId(apt.id);
                             setActiveTab('rx');
                           }}
-                          className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold text-[11px] transition-colors"
+                          className="px-3 py-1.5 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 font-bold text-[11px] transition-colors cursor-pointer"
                         >
                           Write Rx
                         </button>
@@ -305,7 +351,7 @@ export const DoctorPortal: React.FC = () => {
                         {!isDone ? (
                           <button
                             onClick={() => updateAppointmentStatus(apt.id, 'completed')}
-                            className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] shadow-xs"
+                            className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] shadow-xs cursor-pointer"
                           >
                             Mark Completed
                           </button>
@@ -325,167 +371,394 @@ export const DoctorPortal: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 2: FAST PRESCRIPTION PAD */}
+      {/* TAB 2: CLINICAL PRESCRIPTION PAD */}
       {activeTab === 'rx' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
-            <div>
-              <div className="flex items-center space-x-2">
-                <h3 className="text-lg font-bold text-slate-900">
-                  Prescription for {selectedApt?.patientName || 'Selected Patient'}
-                </h3>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 font-semibold text-slate-600">
-                  {selectedApt?.patientPhone}
-                </span>
+        <div className="space-y-6">
+          {/* Top Prescription Action Bar (Controls & Switcher - Hidden on Print) */}
+          <div className="no-print bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+              <div className="flex flex-wrap items-center gap-3">
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
+                    Patient Consultation
+                  </label>
+                  <select
+                    value={selectedAppointmentId}
+                    onChange={(e) => setSelectedAppointmentId(e.target.value)}
+                    className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-xs text-slate-900"
+                  >
+                    {appointments.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.patientName} ({a.time} - {a.service})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
+                    Age / Gender
+                  </label>
+                  <div className="flex items-center space-x-1.5">
+                    <input
+                      type="text"
+                      value={patientAge}
+                      onChange={(e) => setPatientAge(e.target.value)}
+                      placeholder="Age"
+                      className="w-16 px-2 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-center"
+                    />
+                    <select
+                      value={patientGender}
+                      onChange={(e) => setPatientGender(e.target.value)}
+                      className="px-2 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold"
+                    >
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Service: {selectedApt?.service} • Date: {selectedApt?.date}
-              </p>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddCustomMedOpen(true)}
+                  className="px-3.5 py-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 font-bold text-xs flex items-center space-x-1.5 transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5 text-teal-600" />
+                  <span>+ Add Medicine</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleClearMedicines}
+                  className="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 font-semibold text-xs flex items-center space-x-1 transition-colors cursor-pointer"
+                  title="Clear all medicines from slip"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Clear</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSaveRx}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs flex items-center space-x-1.5 transition-colors cursor-pointer"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Save Record</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs flex items-center space-x-1.5 transition-colors cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5 text-teal-400" />
+                  <span>Print Official Rx</span>
+                </button>
+              </div>
             </div>
 
-            {/* Change patient selector */}
-            <div className="flex items-center space-x-2 text-xs">
-              <span className="text-slate-400">Switch Patient:</span>
-              <select
-                value={selectedAppointmentId}
-                onChange={(e) => setSelectedAppointmentId(e.target.value)}
-                className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl font-bold"
-              >
-                {appointments.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.patientName} ({a.time})
-                  </option>
+            {rxSuccess && (
+              <div className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs flex items-center space-x-2 animate-in fade-in">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>Prescription recorded successfully! You can print or download the clean slip anytime.</span>
+              </div>
+            )}
+
+            {/* Quick Add Pharmacopoeia Bar with '+' button beside it */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center space-x-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-teal-600" />
+                  <span>Quick Pharmacopoeia (Click to Add):</span>
+                </label>
+                <span className="text-[11px] text-slate-400">
+                  {quickDrugPresets.length} presets configured
+                </span>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {quickDrugPresets.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => handleAddPresetToSlip(preset)}
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 hover:border-teal-500 bg-slate-50 hover:bg-teal-50/50 text-slate-800 transition-all text-xs font-medium flex items-center space-x-1.5 cursor-pointer shadow-2xs"
+                    title={`${preset.genericName} (${preset.dosage})`}
+                  >
+                    <Plus className="w-3 h-3 text-teal-600" />
+                    <span className="font-bold">{preset.drugName}</span>
+                    <span className="text-[10px] text-slate-400">({preset.frequency.split(' ')[0]})</span>
+                  </button>
                 ))}
-              </select>
+
+                {/* '+' Button Beside Quick Add to Manage / Update Presets */}
+                <button
+                  type="button"
+                  onClick={() => setIsManagePresetsOpen(true)}
+                  className="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs flex items-center space-x-1 shadow-xs transition-colors cursor-pointer"
+                  title="Add new medicine to Quick-Add menu or remove presets"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add / Manage Presets</span>
+                </button>
+              </div>
             </div>
           </div>
 
-          {rxSuccess && (
-            <div className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs flex items-center space-x-2 animate-in fade-in">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span>Prescription saved successfully! Click "Print Prescription" to generate official letterhead.</span>
-            </div>
-          )}
+          {/* THE CLINICAL PRESCRIPTION LETTERHEAD SLIP (Authentic Hospital Pad) */}
+          <div className="bg-white border border-slate-300 rounded-3xl p-8 sm:p-12 shadow-xl max-w-4xl mx-auto print:shadow-none print:border-none print:p-4 print:max-w-none print:w-full print:rounded-none">
+            {/* Pad Letterhead Header */}
+            <div className="border-b-2 border-slate-900 pb-5 flex flex-col sm:flex-row justify-between items-start gap-4">
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xl sm:text-2xl font-black font-serif uppercase tracking-tight text-slate-950">
+                    {clinicInfo.name}
+                  </span>
+                </div>
+                <p className="text-xs font-serif italic text-teal-800 font-semibold mt-0.5">
+                  "{clinicInfo.tagline}"
+                </p>
+                <p className="text-[11px] text-slate-600 mt-1 max-w-md leading-relaxed font-sans">
+                  {clinicInfo.address}, {clinicInfo.area}, {clinicInfo.city}
+                </p>
+                <p className="text-[11px] text-slate-700 font-sans mt-0.5 font-medium">
+                  Helpline: <strong>{clinicInfo.phone}</strong> | <strong>{clinicInfo.secondaryPhone}</strong>
+                </p>
+                <p className="text-[10px] text-slate-500 font-sans">
+                  Email: {clinicInfo.email}
+                </p>
+              </div>
 
-          {/* Diagnosis & Follow-up */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div>
-              <label className="font-bold text-slate-700 mb-1 block">Clinical Diagnosis</label>
+              {/* Doctor Details */}
+              <div className="text-left sm:text-right font-sans">
+                <h3 className="text-base sm:text-lg font-bold text-slate-950">
+                  {doctors[0]?.name || 'Dr. Abhishek V. Kamble'}
+                </h3>
+                <p className="text-xs font-bold text-teal-800">
+                  {doctors[0]?.qualification || 'BDS, MDS'}
+                </p>
+                <p className="text-[11px] text-slate-600 font-medium">
+                  {doctors[0]?.specialization || 'Periodontist & Oral Implantologist'}
+                </p>
+                <p className="text-[11px] font-mono font-bold text-slate-800 mt-0.5">
+                  Reg. No: {doctors[0]?.registration || 'A-43344'}
+                </p>
+                <span className="inline-block text-[9px] uppercase font-bold tracking-wider text-teal-700 bg-teal-50 px-2 py-0.5 rounded-sm mt-1 border border-teal-200">
+                  Multispeciality Dental Clinic
+                </span>
+              </div>
+            </div>
+
+            {/* Patient & Consultation Metadata Strip */}
+            <div className="my-5 py-3 px-4 bg-slate-50/80 rounded-xl border border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-sans">
+              <div>
+                <span className="text-[10px] text-slate-400 uppercase font-bold block">Patient Name</span>
+                <strong className="text-slate-950 font-bold text-sm block">
+                  {selectedApt?.patientName || 'Consultation Patient'}
+                </strong>
+              </div>
+
+              <div>
+                <span className="text-[10px] text-slate-400 uppercase font-bold block">Age / Gender</span>
+                <span className="text-slate-800 font-semibold block">
+                  {patientAge} Yrs / {patientGender}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-[10px] text-slate-400 uppercase font-bold block">Date</span>
+                <span className="text-slate-800 font-semibold block">
+                  {new Date().toLocaleDateString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-[10px] text-slate-400 uppercase font-bold block">Rx Reference No.</span>
+                <span className="text-slate-800 font-mono font-bold block">
+                  CS-{selectedApt?.id.replace(/[^0-9]/g, '').slice(-4) || '4392'}
+                </span>
+              </div>
+            </div>
+
+            {/* Diagnosis Inline Section */}
+            <div className="mb-4 pb-3 border-b border-slate-200 flex items-center space-x-2 text-xs font-sans">
+              <strong className="text-slate-800 uppercase tracking-wider text-[11px] shrink-0">
+                Diagnosis:
+              </strong>
               <input
                 type="text"
                 value={rxDiagnosis}
                 onChange={(e) => setRxDiagnosis(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium"
+                placeholder="Clinical findings / diagnosis"
+                className="w-full bg-transparent border-b border-dashed border-slate-300 focus:border-teal-500 focus:outline-hidden py-0.5 text-slate-800 font-medium"
               />
             </div>
-            <div>
-              <label className="font-bold text-slate-700 mb-1 block">Follow-Up Date</label>
-              <input
-                type="date"
-                value={rxFollowUp}
-                onChange={(e) => setRxFollowUp(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
-              />
-            </div>
-          </div>
 
-          {/* Quick Drug Buttons */}
-          <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 block flex items-center space-x-1">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-              <span>1-Click Pharmacopoeia Additions</span>
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-              {dentalPresets.map((m, idx) => (
+            {/* Classic Medical ℞ Symbol */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-3xl font-serif font-black text-slate-900 select-none">
+                ℞
+              </div>
+              <div className="no-print">
                 <button
-                  key={idx}
                   type="button"
-                  onClick={() => handleAddMedicine(m)}
-                  className="p-2 text-left rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 transition-all text-xs"
+                  onClick={() => setIsAddCustomMedOpen(true)}
+                  className="text-xs font-bold text-teal-700 hover:text-teal-800 flex items-center space-x-1 cursor-pointer"
                 >
-                  <strong className="block font-bold text-slate-800 truncate">{m.drugName}</strong>
-                  <span className="text-[10px] text-slate-500 block truncate">{m.frequency}</span>
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Medicine</span>
                 </button>
-              ))}
+              </div>
             </div>
-          </div>
 
-          {/* Prescribed List */}
-          <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2 block">
-              Medications on Slip ({medicines.length})
-            </label>
-            <div className="space-y-2">
-              {medicines.map((med, idx) => (
-                <div
-                  key={med.id}
-                  className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs"
-                >
-                  <div className="flex items-center space-x-2.5">
-                    <span className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center text-[11px]">
-                      {idx + 1}
-                    </span>
-                    <div>
-                      <strong className="font-bold text-slate-900">{med.drugName}</strong>
-                      <span className="text-[11px] text-slate-500 ml-2">
-                        ({med.frequency} • {med.duration})
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleRemoveMedicine(med.id)}
-                    className="p-1 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+            {/* Prescribed Medicines Table */}
+            <div className="overflow-x-auto mb-6">
+              <table className="w-full text-left text-xs border border-slate-300 font-sans">
+                <thead className="bg-slate-100 text-slate-700 uppercase font-bold tracking-wider text-[10px] border-b border-slate-300">
+                  <tr>
+                    <th className="p-2.5 border-r border-slate-300 w-10 text-center">#</th>
+                    <th className="p-2.5 border-r border-slate-300">Medicine & Salt Formulation</th>
+                    <th className="p-2.5 border-r border-slate-300 w-24">Dosage</th>
+                    <th className="p-2.5 border-r border-slate-300 w-36">Frequency / Timing</th>
+                    <th className="p-2.5 border-r border-slate-300 w-24">Duration</th>
+                    <th className="p-2.5">Instructions</th>
+                    <th className="p-2.5 no-print w-10 text-center"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {medicines.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="p-6 text-center text-slate-400 italic font-sans">
+                        No medications prescribed yet. Click any Quick Preset above or "+ Add Medicine" to prescribe.
+                      </td>
+                    </tr>
+                  ) : (
+                    medicines.map((med, idx) => (
+                      <tr key={med.id} className="hover:bg-slate-50/50">
+                        <td className="p-2.5 border-r border-slate-300 font-bold text-slate-900 text-center">
+                          {idx + 1}
+                        </td>
+                        <td className="p-2.5 border-r border-slate-300">
+                          <strong className="block font-bold text-slate-900 text-sm">
+                            {med.drugName}
+                          </strong>
+                          {med.genericName && (
+                            <span className="text-[10px] text-slate-500 font-sans block">
+                              {med.genericName}
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-2.5 border-r border-slate-300 font-medium text-slate-800">
+                          {med.dosage}
+                        </td>
+                        <td className="p-2.5 border-r border-slate-300 font-bold text-slate-900">
+                          {med.frequency}
+                        </td>
+                        <td className="p-2.5 border-r border-slate-300 font-medium text-slate-800">
+                          {med.duration}
+                        </td>
+                        <td className="p-2.5 text-slate-700">
+                          {med.specialInstructions}
+                        </td>
+                        <td className="p-2.5 no-print text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveMedicine(med.id)}
+                            className="p-1 text-slate-400 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors"
+                            title="Remove medication"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Clinical Advice & Follow-Up Section */}
+            <div className="space-y-4 pt-2 border-t border-slate-200 font-sans text-xs">
+              <div>
+                <strong className="block font-bold text-slate-900 uppercase tracking-wider text-[11px] mb-1.5">
+                  Advice & Directions:
+                </strong>
+                <textarea
+                  rows={3}
+                  value={rxAdvice}
+                  onChange={(e) => setRxAdvice(e.target.value)}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 leading-relaxed font-sans print:border-none print:p-0 print:bg-transparent print:resize-none"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                <div className="flex items-center space-x-2">
+                  <strong className="text-slate-900 font-bold text-[11px] uppercase tracking-wider">
+                    Next Review / Follow-Up:
+                  </strong>
+                  <input
+                    type="date"
+                    value={rxFollowUp}
+                    onChange={(e) => setRxFollowUp(e.target.value)}
+                    className="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 print:border-none print:p-0 print:bg-transparent"
+                  />
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
 
-          {/* Instructions */}
-          <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-1 block">
-              Instructions & Advice
-            </label>
-            <textarea
-              rows={2}
-              value={rxAdvice}
-              onChange={(e) => setRxAdvice(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl"
-            />
-          </div>
+            {/* Signature & Seal Block */}
+            <div className="mt-12 pt-6 border-t-2 border-slate-900 flex justify-between items-end font-sans text-xs">
+              <div className="space-y-1 text-[10px] text-slate-500 max-w-sm">
+                <p className="font-semibold text-slate-700">
+                  * Official Digital Medical Prescription — Classic Smile Dental Care.
+                </p>
+                <p>
+                  For dental emergencies or drug reactions, contact clinic helpline at {clinicInfo.phone} immediately.
+                </p>
+              </div>
 
-          {/* Actions */}
-          <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100">
-            <button
-              onClick={() => window.print()}
-              className="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs flex items-center space-x-1.5 cursor-pointer"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Print Official Rx</span>
-            </button>
-
-            <button
-              onClick={handleSaveRx}
-              className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs flex items-center space-x-1.5 cursor-pointer"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Save Prescription</span>
-            </button>
+              <div className="text-right">
+                <div className="h-12 flex items-center justify-end">
+                  <span className="font-serif italic text-slate-400 text-sm select-none">
+                    [Dr. Abhishek Kamble]
+                  </span>
+                </div>
+                <strong className="block text-slate-950 font-bold text-sm">
+                  {doctors[0]?.name || 'Dr. Abhishek V. Kamble'}
+                </strong>
+                <span className="text-[11px] text-teal-800 font-semibold block">
+                  BDS, MDS (Periodontist & Oral Implantologist)
+                </span>
+                <span className="text-[10px] text-slate-600 font-mono block">
+                  Reg. No: {doctors[0]?.registration || 'A-43344'}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* TAB 3: PATIENT REVIEWS (Live doctor feed) */}
+      {/* TAB 3: PATIENT REVIEWS */}
       {activeTab === 'reviews' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
+        <div className="no-print bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <div>
               <h3 className="font-bold text-sm text-slate-800">
                 Patient Feedback & Clinic Reviews ({reviews.length})
               </h3>
-              <p className="text-xs text-slate-500">Live reviews submitted by patients on the portfolio</p>
+              <p className="text-xs text-slate-500">Live reviews submitted by patients on the clinic website</p>
+            </div>
+            <div className="flex items-center space-x-1.5 px-3 py-1 bg-amber-50 text-amber-800 rounded-full text-xs font-bold">
+              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+              <span>4.9 / 5.0 Average</span>
             </div>
           </div>
 
@@ -501,7 +774,7 @@ export const DoctorPortal: React.FC = () => {
                       <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
                     ))}
                     <span className="text-[10px] font-bold text-slate-500 ml-1">
-                      {rev.rating}.0 / 5.0
+                      {rev.rating}.0
                     </span>
                   </div>
                   <p className="text-slate-700 italic">"{rev.comment}"</p>
@@ -520,16 +793,16 @@ export const DoctorPortal: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 4: MANAGE DOCTORS (Admin: add doctors & toggle active/inactive login) */}
+      {/* TAB 4: MANAGE DOCTORS */}
       {activeTab === 'team' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-5">
+        <div className="no-print bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
             <div>
               <h3 className="font-bold text-sm text-slate-800">
                 Clinic Medical Staff & Doctor Accounts
               </h3>
               <p className="text-xs text-slate-500">
-                Admin can add new doctor profiles and activate or deactivate doctor logins
+                Lead Doctor (Dr. Abhishek V. Kamble) can add new doctors and activate or deactivate doctor logins
               </p>
             </div>
 
@@ -574,11 +847,10 @@ export const DoctorPortal: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Toggle Login Active / Deactivate */}
                 {doc.id !== 'doc-abhishek' && (
                   <button
                     onClick={() => toggleDoctorStatus(doc.id, !doc.isActive)}
-                    className={`px-3 py-1.5 rounded-xl font-bold text-[11px] border transition-colors ${
+                    className={`px-3 py-1.5 rounded-xl font-bold text-[11px] border transition-colors cursor-pointer ${
                       doc.isActive
                         ? 'border-red-200 text-red-600 hover:bg-red-50'
                         : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
@@ -593,15 +865,276 @@ export const DoctorPortal: React.FC = () => {
         </div>
       )}
 
-      {/* Add Doctor Modal */}
+      {/* MODAL 1: ADD / MANAGE QUICK PRESETS MODAL */}
+      {isManagePresetsOpen && (
+        <div className="no-print fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Sparkles className="w-5 h-5 text-teal-400" />
+                <h3 className="font-bold text-sm text-white">
+                  Quick Pharmacopoeia Manager
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsManagePresetsOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-6 text-xs">
+              {/* Add New Preset Form */}
+              <form onSubmit={handleSaveNewPreset} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                <strong className="text-slate-900 font-bold block text-sm">
+                  Add New 1-Click Medication Preset
+                </strong>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Drug / Brand Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={presetDrugName}
+                      onChange={(e) => setPresetDrugName(e.target.value)}
+                      placeholder="e.g. Dolo 650mg"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Generic Composition</label>
+                    <input
+                      type="text"
+                      value={presetGenericName}
+                      onChange={(e) => setPresetGenericName(e.target.value)}
+                      placeholder="e.g. Paracetamol 650mg"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Dosage</label>
+                    <input
+                      type="text"
+                      value={presetDosage}
+                      onChange={(e) => setPresetDosage(e.target.value)}
+                      placeholder="e.g. 1 tab / 650mg"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Frequency</label>
+                    <input
+                      type="text"
+                      value={presetFrequency}
+                      onChange={(e) => setPresetFrequency(e.target.value)}
+                      placeholder="e.g. 1-0-1 (After food)"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Duration</label>
+                    <input
+                      type="text"
+                      value={presetDuration}
+                      onChange={(e) => setPresetDuration(e.target.value)}
+                      placeholder="e.g. 3 days"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Special Instructions</label>
+                    <input
+                      type="text"
+                      value={presetInstructions}
+                      onChange={(e) => setPresetInstructions(e.target.value)}
+                      placeholder="e.g. Take after meals for fever/pain"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl flex items-center space-x-1.5 shadow-xs cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Save to Quick Add Menu</span>
+                  </button>
+                </div>
+              </form>
+
+              {/* Current Presets List */}
+              <div className="space-y-2">
+                <strong className="text-slate-800 font-bold block text-sm">
+                  Configured Presets ({quickDrugPresets.length})
+                </strong>
+
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {quickDrugPresets.map((preset) => (
+                    <div
+                      key={preset.id}
+                      className="p-3 bg-white border border-slate-200 rounded-xl flex items-center justify-between"
+                    >
+                      <div>
+                        <strong className="font-bold text-slate-900 block">{preset.drugName}</strong>
+                        <span className="text-[11px] text-slate-500 block">
+                          {preset.genericName} • {preset.dosage} • {preset.frequency}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => removeQuickDrugPreset(preset.id)}
+                        className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                        title="Delete Preset"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsManagePresetsOpen(false)}
+                className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: ADD CUSTOM MEDICINE TO PRESCRIPTION SLIP */}
+      {isAddCustomMedOpen && (
+        <div className="no-print fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
+            <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
+              <h3 className="font-bold text-sm text-white flex items-center space-x-1.5">
+                <Plus className="w-4 h-4 text-teal-400" />
+                <span>Add Medication to Prescription</span>
+              </h3>
+              <button
+                onClick={() => setIsAddCustomMedOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddCustomMedicineToSlip} className="p-6 space-y-4 text-xs">
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Medicine / Drug Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={customDrugName}
+                  onChange={(e) => setCustomDrugName(e.target.value)}
+                  placeholder="e.g. Amox 500mg, Metrogyl 400mg, Ketorol DT"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Generic Salt / Composition</label>
+                <input
+                  type="text"
+                  value={customGenericName}
+                  onChange={(e) => setCustomGenericName(e.target.value)}
+                  placeholder="e.g. Metronidazole 400mg"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Dosage</label>
+                  <input
+                    type="text"
+                    value={customDosage}
+                    onChange={(e) => setCustomDosage(e.target.value)}
+                    placeholder="e.g. 1 tab"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Frequency</label>
+                  <input
+                    type="text"
+                    value={customFrequency}
+                    onChange={(e) => setCustomFrequency(e.target.value)}
+                    placeholder="e.g. 1-0-1 (Twice daily)"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Duration</label>
+                  <input
+                    type="text"
+                    value={customDuration}
+                    onChange={(e) => setCustomDuration(e.target.value)}
+                    placeholder="e.g. 5 days"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Special Instructions</label>
+                  <input
+                    type="text"
+                    value={customInstructions}
+                    onChange={(e) => setCustomInstructions(e.target.value)}
+                    placeholder="e.g. Take after meals"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddCustomMedOpen(false)}
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold shadow-xs cursor-pointer"
+                >
+                  Add to Slip
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: ADD DOCTOR MODAL */}
       {isAddDoctorOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+        <div className="no-print fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
             <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
               <h3 className="font-bold text-sm text-white">Add New Doctor Profile</h3>
               <button
                 onClick={() => setIsAddDoctorOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -658,13 +1191,13 @@ export const DoctorPortal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsAddDoctorOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold"
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold"
+                  className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold cursor-pointer"
                 >
                   Add Doctor
                 </button>
@@ -673,98 +1206,6 @@ export const DoctorPortal: React.FC = () => {
           </div>
         </div>
       )}
-      </div>
-
-      {/* OFFICIAL PRINTABLE PRESCRIPTION SLIP (Paper / PDF Output) */}
-      <div className="print-only p-8 text-black bg-white max-w-4xl mx-auto font-sans">
-        {/* Letterhead Header */}
-        <div className="border-b-2 border-slate-900 pb-4 flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl font-bold font-serif uppercase tracking-tight text-slate-900">
-              {clinicInfo.name}
-            </h1>
-            <p className="text-xs font-semibold text-slate-600 italic">
-              "{clinicInfo.tagline}"
-            </p>
-            <p className="text-[11px] text-slate-600 mt-1 max-w-md">
-              {clinicInfo.address}, {clinicInfo.city}
-            </p>
-            <p className="text-[11px] text-slate-700 mt-0.5">
-              Ph: {clinicInfo.phone} / {clinicInfo.secondaryPhone} | Email: {clinicInfo.email}
-            </p>
-          </div>
-          <div className="text-right">
-            <h2 className="text-lg font-bold text-slate-900">{doctors[0]?.name || 'Dr. Abhishek V. Kamble'}</h2>
-            <p className="text-xs font-semibold text-teal-800">{doctors[0]?.qualification || 'BDS, MDS'}</p>
-            <p className="text-[11px] font-medium text-slate-600">{doctors[0]?.specialization}</p>
-            <p className="text-[11px] font-bold text-slate-700">Reg. No: {doctors[0]?.registration || 'A-43344'}</p>
-          </div>
-        </div>
-
-        {/* Patient and Visit Details */}
-        <div className="my-4 py-2 border-b border-slate-300 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-          <div><strong>Patient:</strong> {selectedApt?.patientName || 'N/A'}</div>
-          <div><strong>Phone:</strong> {selectedApt?.patientPhone || 'N/A'}</div>
-          <div><strong>Date:</strong> {new Date().toLocaleDateString('en-IN')}</div>
-          <div><strong>Diagnosis:</strong> {rxDiagnosis}</div>
-        </div>
-
-        {/* Rx Symbol */}
-        <div className="text-2xl font-serif font-black my-2">℞</div>
-
-        {/* Prescribed Medicines Table */}
-        <table className="w-full text-left text-xs border border-slate-300 mb-6">
-          <thead className="bg-slate-100 border-b border-slate-300">
-            <tr>
-              <th className="p-2 border-r border-slate-300">#</th>
-              <th className="p-2 border-r border-slate-300">Medicine & Formulation</th>
-              <th className="p-2 border-r border-slate-300">Dosage</th>
-              <th className="p-2 border-r border-slate-300">Frequency</th>
-              <th className="p-2 border-r border-slate-300">Duration</th>
-              <th className="p-2">Instructions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {medicines.map((m, idx) => (
-              <tr key={m.id} className="border-b border-slate-200">
-                <td className="p-2 border-r border-slate-300 font-bold">{idx + 1}</td>
-                <td className="p-2 border-r border-slate-300">
-                  <strong className="block">{m.drugName}</strong>
-                  <span className="text-[10px] text-slate-500">{m.genericName}</span>
-                </td>
-                <td className="p-2 border-r border-slate-300">{m.dosage}</td>
-                <td className="p-2 border-r border-slate-300 font-semibold">{m.frequency}</td>
-                <td className="p-2 border-r border-slate-300">{m.duration}</td>
-                <td className="p-2">{m.specialInstructions}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {/* Advice / Notes */}
-        <div className="mb-8 text-xs">
-          <strong className="block font-bold text-slate-800 mb-1">Clinical Advice & Instructions:</strong>
-          <p className="whitespace-pre-line text-slate-700">{rxAdvice}</p>
-          {rxFollowUp && (
-            <p className="mt-2 text-slate-800 font-semibold">
-              Next Follow-Up Date: {rxFollowUp}
-            </p>
-          )}
-        </div>
-
-        {/* Doctor Signature Block */}
-        <div className="mt-16 flex justify-between items-end border-t border-slate-300 pt-4 text-xs">
-          <div className="text-[10px] text-slate-500">
-            * Generated via Classic Smile Dental Care Clinic System.<br />
-            Emergency Contacts: {clinicInfo.phone} | {clinicInfo.secondaryPhone}
-          </div>
-          <div className="text-right">
-            <div className="h-10"></div>
-            <strong className="block text-slate-900">{doctors[0]?.name || 'Dr. Abhishek V. Kamble'}</strong>
-            <span className="text-[11px] text-slate-600">BDS, MDS (Reg. A-43344)</span>
-          </div>
-        </div>
-      </div>
-    </>
+    </div>
   );
 };

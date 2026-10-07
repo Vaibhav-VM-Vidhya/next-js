@@ -19,6 +19,7 @@ export const ReceptionDashboard: React.FC = () => {
   const {
     appointments,
     updateAppointmentStatus,
+    rescheduleAppointment,
     createAppointment,
     doctors,
     clinicInfo,
@@ -28,13 +29,41 @@ export const ReceptionDashboard: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
-  // Walk-in form state
+  // Clinic Time Slots
+  const clinicSlots = [
+    '10:00 AM',
+    '10:30 AM',
+    '11:00 AM',
+    '11:30 AM',
+    '12:00 PM',
+    '12:30 PM',
+    '01:00 PM',
+    '04:00 PM',
+    '04:30 PM',
+    '05:00 PM',
+    '05:30 PM',
+    '06:00 PM',
+    '06:30 PM',
+    '07:00 PM',
+    '07:30 PM',
+    '08:00 PM',
+    '08:30 PM',
+  ];
+
+  // Walk-in form state with structured slots
   const [walkinName, setWalkinName] = useState('');
   const [walkinPhone, setWalkinPhone] = useState('');
-  const [walkinService, setWalkinService] = useState('Toothache / Emergency Evaluation');
+  const [walkinService, setWalkinService] = useState('Dental Implants & Consultation');
   const [walkinDoctorId, setWalkinDoctorId] = useState(doctors[0]?.id || 'doc-abhishek');
-  const [walkinTime, setWalkinTime] = useState('Immediate / Walk-In');
+  const [walkinDate, setWalkinDate] = useState(new Date().toISOString().split('T')[0]);
+  const [walkinSlot, setWalkinSlot] = useState('10:30 AM');
   const [walkinNotes, setWalkinNotes] = useState('');
+
+  // Reschedule Modal State
+  const [rescheduleTarget, setRescheduleTarget] = useState<any>(null);
+  const [rescheduleDate, setRescheduleDate] = useState(new Date().toISOString().split('T')[0]);
+  const [rescheduleSlot, setRescheduleSlot] = useState('11:30 AM');
+  const [rescheduleSuccess, setRescheduleSuccess] = useState(false);
 
   const filteredAppointments = appointments.filter((a) => {
     const matchesSearch =
@@ -61,8 +90,8 @@ export const ReceptionDashboard: React.FC = () => {
       patientPhone: walkinPhone.trim(),
       doctorId: doc.id,
       doctorName: doc.name,
-      date: new Date().toISOString().split('T')[0],
-      time: walkinTime === 'Immediate / Walk-In' ? new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : walkinTime,
+      date: walkinDate,
+      time: walkinSlot,
       service: walkinService,
       status: 'checked-in',
       notes: walkinNotes ? `Walk-in: ${walkinNotes}` : 'Walk-in registered at front desk.',
@@ -72,6 +101,18 @@ export const ReceptionDashboard: React.FC = () => {
     setWalkinName('');
     setWalkinPhone('');
     setWalkinNotes('');
+  };
+
+  const handleConfirmReschedule = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rescheduleTarget) return;
+
+    rescheduleAppointment(rescheduleTarget.id, rescheduleDate, rescheduleSlot);
+    setRescheduleSuccess(true);
+    setTimeout(() => {
+      setRescheduleSuccess(false);
+      setRescheduleTarget(null);
+    }, 900);
   };
 
   const getStatusBadge = (status: AppointmentStatus) => {
@@ -237,7 +278,21 @@ export const ReceptionDashboard: React.FC = () => {
                       {getStatusBadge(apt.status)}
                     </td>
 
-                    <td className="px-6 py-3.5 text-right space-x-1.5">
+                    <td className="px-6 py-3.5 text-right space-x-1.5 whitespace-nowrap">
+                      {apt.status !== 'completed' && (
+                        <button
+                          onClick={() => {
+                            setRescheduleTarget(apt);
+                            setRescheduleDate(apt.date);
+                            setRescheduleSlot(apt.time);
+                          }}
+                          className="px-2.5 py-1 rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-[11px] transition-colors cursor-pointer"
+                          title="Reschedule Appointment Date & Time"
+                        >
+                          Reschedule
+                        </button>
+                      )}
+
                       {apt.status === 'scheduled' && (
                         <button
                           onClick={() => updateAppointmentStatus(apt.id, 'checked-in')}
@@ -280,12 +335,15 @@ export const ReceptionDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Fast Walk-In Registration Modal */}
+      {/* Fast Walk-In Registration Modal with Slot Selection */}
       {isRegisterOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden">
             <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
-              <h3 className="font-bold text-sm text-white">Register Immediate Walk-In Patient</h3>
+              <div>
+                <h3 className="font-bold text-sm text-white">Book & Register Patient at Reception</h3>
+                <p className="text-[11px] text-slate-400 mt-0.5">Select preferred date & operatory time slot</p>
+              </div>
               <button
                 onClick={() => setIsRegisterOpen(false)}
                 className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
@@ -294,29 +352,75 @@ export const ReceptionDashboard: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleRegisterWalkIn} className="p-6 space-y-4 text-xs">
-              <div>
-                <label className="font-bold text-slate-700 mb-1 block">Patient Full Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={walkinName}
-                  onChange={(e) => setWalkinName(e.target.value)}
-                  placeholder="e.g. Suresh Shinde"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
-                />
+            <form onSubmit={handleRegisterWalkIn} className="p-6 space-y-4 text-xs max-h-[85vh] overflow-y-auto">
+              {/* Date & Slot selection */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-700 mb-1 block">Visit Date *</label>
+                  <input
+                    type="date"
+                    required
+                    min={new Date().toISOString().split('T')[0]}
+                    value={walkinDate}
+                    onChange={(e) => setWalkinDate(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 mb-1 block">Selected Time Slot *</label>
+                  <div className="px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl font-bold text-teal-700">
+                    {walkinSlot}
+                  </div>
+                </div>
               </div>
 
+              {/* Slots Grid */}
               <div>
-                <label className="font-bold text-slate-700 mb-1 block">Phone Number *</label>
-                <input
-                  type="tel"
-                  required
-                  value={walkinPhone}
-                  onChange={(e) => setWalkinPhone(e.target.value)}
-                  placeholder="+91 98000 00000"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
-                />
+                <label className="font-bold text-slate-700 mb-1.5 block">Select Available Time Slot *</label>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 max-h-32 overflow-y-auto p-1.5 bg-slate-50 rounded-xl border border-slate-200">
+                  {clinicSlots.map((slot) => (
+                    <button
+                      key={slot}
+                      type="button"
+                      onClick={() => setWalkinSlot(slot)}
+                      className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all ${
+                        walkinSlot === slot
+                          ? 'bg-teal-600 text-white shadow-xs'
+                          : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {slot}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Patient Name and Phone */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-700 mb-1 block">Patient Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={walkinName}
+                    onChange={(e) => setWalkinName(e.target.value)}
+                    placeholder="e.g. Suresh Shinde"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 mb-1 block">Phone Number *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={walkinPhone}
+                    onChange={(e) => setWalkinPhone(e.target.value)}
+                    placeholder="+91 98000 00000"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                  />
+                </div>
               </div>
 
               <div>
@@ -336,12 +440,20 @@ export const ReceptionDashboard: React.FC = () => {
 
               <div>
                 <label className="font-bold text-slate-700 mb-1 block">Treatment / Complaint</label>
-                <input
-                  type="text"
+                <select
                   value={walkinService}
                   onChange={(e) => setWalkinService(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
-                />
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium"
+                >
+                  <option value="Dental Implants & Oral Implantology">Dental Implants & Oral Implantology</option>
+                  <option value="Periodontal / Gum Treatment">Periodontal / Gum Treatment</option>
+                  <option value="Root Canal Treatment (RCT)">Root Canal Treatment (RCT)</option>
+                  <option value="General Dentistry & Checkup">General Dentistry & Checkup</option>
+                  <option value="Multispeciality Dental Care">Multispeciality Dental Care</option>
+                  <option value="Restorative & Cosmetic Dentistry">Restorative & Cosmetic Dentistry</option>
+                  <option value="Emergency Toothache & Pain Relief">Emergency Toothache & Pain Relief</option>
+                  <option value="Teeth Cleaning & Polishing">Teeth Cleaning & Polishing</option>
+                </select>
               </div>
 
               <div>
@@ -350,7 +462,7 @@ export const ReceptionDashboard: React.FC = () => {
                   type="text"
                   value={walkinNotes}
                   onChange={(e) => setWalkinNotes(e.target.value)}
-                  placeholder="e.g. Penicillin allergy, severe throbbing pain"
+                  placeholder="e.g. Penicillin allergy, severe pain"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
                 />
               </div>
@@ -365,12 +477,104 @@ export const ReceptionDashboard: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold shadow-xs cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold shadow-xs cursor-pointer"
                 >
-                  Register & Check-In
+                  Book & Check In
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reschedule Appointment Modal */}
+      {rescheduleTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
+            <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-sm text-white">Reschedule Appointment</h3>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Patient: {rescheduleTarget.patientName} ({rescheduleTarget.patientPhone})
+                </p>
+              </div>
+              <button
+                onClick={() => setRescheduleTarget(null)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {rescheduleSuccess ? (
+              <div className="p-8 text-center space-y-3">
+                <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto animate-bounce">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
+                <h4 className="text-base font-bold text-slate-900">Appointment Rescheduled!</h4>
+                <p className="text-xs text-slate-500">
+                  New appointment confirmed for <strong>{rescheduleDate}</strong> at <strong className="text-teal-700">{rescheduleSlot}</strong>.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleConfirmReschedule} className="p-6 space-y-4 text-xs">
+                {/* Current Info */}
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-600 space-y-1">
+                  <p><strong>Current Slot:</strong> {rescheduleTarget.date} at {rescheduleTarget.time}</p>
+                  <p><strong>Treatment:</strong> {rescheduleTarget.service}</p>
+                </div>
+
+                {/* New Date */}
+                <div>
+                  <label className="font-bold text-slate-700 mb-1 block">New Appointment Date *</label>
+                  <input
+                    type="date"
+                    required
+                    min={new Date().toISOString().split('T')[0]}
+                    value={rescheduleDate}
+                    onChange={(e) => setRescheduleDate(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                  />
+                </div>
+
+                {/* New Slot */}
+                <div>
+                  <label className="font-bold text-slate-700 mb-1.5 block">Select New Time Slot *</label>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 max-h-36 overflow-y-auto p-1.5 bg-slate-50 rounded-xl border border-slate-200">
+                    {clinicSlots.map((slot) => (
+                      <button
+                        key={slot}
+                        type="button"
+                        onClick={() => setRescheduleSlot(slot)}
+                        className={`py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all ${
+                          rescheduleSlot === slot
+                            ? 'bg-teal-600 text-white shadow-xs'
+                            : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {slot}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-end space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setRescheduleTarget(null)}
+                    className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold shadow-xs cursor-pointer"
+                  >
+                    Confirm Reschedule
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

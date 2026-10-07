@@ -88,68 +88,61 @@ export const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center space-x-2 text-xs font-semibold">
-          <button
-            onClick={() => setActiveView('public-home')}
-            className={`px-3.5 py-2 rounded-xl transition-all ${
-              activeView === 'public-home'
-                ? 'bg-slate-800 text-sky-400 font-bold'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-            }`}
-          >
-            Clinic Portfolio
-          </button>
-
-          {/* If logged in as Doctor */}
-          {currentStaffUser?.role === 'doctor' && (
-            <button
-              onClick={() => setActiveView('doctor-chair')}
-              className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 ${
-                activeView === 'doctor-chair'
-                  ? 'bg-sky-600 text-white font-bold'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <Stethoscope className="w-3.5 h-3.5" />
-              <span>Doctor Console</span>
-            </button>
-          )}
-
-          {/* If logged in as Receptionist */}
-          {currentStaffUser?.role === 'receptionist' && (
-            <button
-              onClick={() => setActiveView('reception-desk')}
-              className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 ${
-                activeView === 'reception-desk'
-                  ? 'bg-sky-600 text-white font-bold'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <ClipboardList className="w-3.5 h-3.5" />
-              <span>Reception Desk</span>
-            </button>
-          )}
-        </nav>
-
         {/* Right CTA Actions */}
         <div className="hidden md:flex items-center space-x-3">
           <button
+            onClick={() => setActiveView(activeView === 'doctor-info' ? 'public-home' : 'doctor-info')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+              activeView === 'doctor-info'
+                ? 'bg-teal-950 text-teal-300 border border-teal-500/50'
+                : 'text-slate-300 hover:text-white hover:bg-slate-900 border border-transparent'
+            }`}
+          >
+            Doctor Profile
+          </button>
+
+          <button
             onClick={() => setIsBookingModalOpen(true)}
-            className="px-4 py-2 rounded-xl bg-linear-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white font-bold text-xs shadow-md transition-all flex items-center space-x-1.5 cursor-pointer"
+            className="px-4 py-2 rounded-xl bg-linear-to-r from-teal-500 to-sky-500 hover:from-teal-600 hover:to-sky-600 text-white font-bold text-xs shadow-md transition-all flex items-center space-x-1.5 cursor-pointer"
           >
             <Calendar className="w-3.5 h-3.5" />
             <span>Book Visit</span>
           </button>
 
-          {/* Staff Auth Button / Badge */}
+          {/* Staff Auth Button / Quick Switcher */}
           {currentStaffUser ? (
             <div className="flex items-center space-x-2 pl-2 border-l border-slate-800">
+              {/* Portal / Website toggle */}
+              {currentStaffUser.role === 'doctor' && (
+                <button
+                  onClick={() =>
+                    setActiveView(activeView === 'doctor-chair' ? 'public-home' : 'doctor-chair')
+                  }
+                  className="px-3 py-1.5 rounded-xl bg-teal-950/80 border border-teal-500/40 text-teal-300 hover:text-white hover:bg-teal-900 font-semibold text-xs flex items-center space-x-1 transition-colors cursor-pointer"
+                >
+                  <Stethoscope className="w-3.5 h-3.5 text-teal-400" />
+                  <span>{activeView === 'doctor-chair' ? 'View Website' : 'Doctor Console'}</span>
+                </button>
+              )}
+
+              {currentStaffUser.role === 'receptionist' && (
+                <button
+                  onClick={() =>
+                    setActiveView(activeView === 'reception-desk' ? 'public-home' : 'reception-desk')
+                  }
+                  className="px-3 py-1.5 rounded-xl bg-sky-950/80 border border-sky-500/40 text-sky-300 hover:text-white hover:bg-sky-900 font-semibold text-xs flex items-center space-x-1 transition-colors cursor-pointer"
+                >
+                  <ClipboardList className="w-3.5 h-3.5 text-sky-400" />
+                  <span>{activeView === 'reception-desk' ? 'View Website' : 'Reception Desk'}</span>
+                </button>
+              )}
+
               <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-xs">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="font-bold text-slate-200">{currentStaffUser.name}</span>
                 <span className="text-[10px] text-slate-400 capitalize">({currentStaffUser.role})</span>
               </div>
+
               <button
                 onClick={logout}
                 className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-900 rounded-xl transition-colors cursor-pointer"
@@ -163,7 +156,7 @@ export const Navbar: React.FC = () => {
               onClick={() => setIsLoginModalOpen(true)}
               className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 font-semibold text-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
             >
-              <Lock className="w-3.5 h-3.5 text-sky-400" />
+              <Lock className="w-3.5 h-3.5 text-teal-400" />
               <span>Staff Login</span>
             </button>
           )}
@@ -196,7 +189,17 @@ export const Navbar: React.FC = () => {
             }}
             className="w-full text-left py-2 font-semibold text-slate-200"
           >
-            Clinic Portfolio
+            Home & Clinic Services
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveView('doctor-info');
+              setMobileMenuOpen(false);
+            }}
+            className="w-full text-left py-2 font-semibold text-teal-300"
+          >
+            Doctor Profile (Dr. Abhishek V. Kamble)
           </button>
 
           {currentStaffUser?.role === 'doctor' && (
@@ -205,7 +208,7 @@ export const Navbar: React.FC = () => {
                 setActiveView('doctor-chair');
                 setMobileMenuOpen(false);
               }}
-              className="w-full text-left py-2 font-bold text-sky-400"
+              className="w-full text-left py-2 font-bold text-teal-400"
             >
               Doctor Console & Rx
             </button>
