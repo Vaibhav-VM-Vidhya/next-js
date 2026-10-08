@@ -290,31 +290,31 @@ export const DoctorPortal: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Console Header Bar (Hidden on Print) */}
-      <div className="no-print bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+      <div className="no-print bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-teal-600 flex items-center justify-center font-bold">
-            <Stethoscope className="w-6 h-6" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-teal-600 flex items-center justify-center font-bold shrink-0">
+            <Stethoscope className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <div className="flex items-center space-x-2">
-              <h2 className="text-xl font-bold text-slate-900">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <h2 className="text-base sm:text-xl font-bold text-slate-900">
                 Doctor Console — {currentStaffUser?.name || 'Dr. Abhishek V. Kamble'}
               </h2>
               <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 border border-teal-200">
                 MDS Specialist
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
               Periodontics & Oral Implantology • Reg. No: A-43344
             </p>
           </div>
         </div>
 
         {/* Console Navigation Tabs */}
-        <div className="bg-slate-100 p-1 rounded-2xl flex flex-wrap gap-1 text-xs font-bold">
+        <div className="bg-slate-100 p-1 rounded-2xl flex overflow-x-auto no-scrollbar gap-1 text-xs font-bold w-full md:w-auto">
           <button
             onClick={() => setActiveTab('appointments')}
-            className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer ${
+            className={`px-3 py-2 rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
               activeTab === 'appointments'
                 ? 'bg-white text-teal-700 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
@@ -326,38 +326,38 @@ export const DoctorPortal: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('rx')}
-            className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer ${
+            className={`px-3 py-2 rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
               activeTab === 'rx'
                 ? 'bg-white text-emerald-700 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <FileText className="w-3.5 h-3.5" />
-            <span>Clinical Prescription Pad</span>
+            <span>Prescription Pad</span>
           </button>
 
           <button
             onClick={() => setActiveTab('reviews')}
-            className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer ${
+            className={`px-3 py-2 rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
               activeTab === 'reviews'
                 ? 'bg-white text-amber-700 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Star className="w-3.5 h-3.5" />
-            <span>Patient Reviews ({reviews.length})</span>
+            <span>Reviews ({reviews.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('team')}
-            className={`px-3.5 py-2 rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer ${
+            className={`px-3 py-2 rounded-xl transition-all flex items-center space-x-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
               activeTab === 'team'
                 ? 'bg-white text-purple-700 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <User className="w-3.5 h-3.5" />
-            <span>Manage Doctors ({doctors.length})</span>
+            <span>Doctors ({doctors.length})</span>
           </button>
         </div>
       </div>
@@ -366,22 +366,22 @@ export const DoctorPortal: React.FC = () => {
       {activeTab === 'appointments' && (
         <div className="no-print space-y-4">
           {/* Quick Metrics Bar for Doctor's Patient Load */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
             <button
               onClick={() => {
                 setPatientDateFilter('today');
                 setPatientStatusFilter('all');
               }}
-              className="p-4 bg-white border border-slate-200 hover:border-teal-400 rounded-2xl text-left transition-all shadow-xs cursor-pointer group"
+              className="p-3 sm:p-4 bg-white border border-slate-200 hover:border-teal-400 rounded-2xl text-left transition-all shadow-xs cursor-pointer group"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   Today's Consultations
                 </span>
-                <Calendar className="w-4 h-4 text-slate-400 group-hover:text-teal-600 transition-colors" />
+                <Calendar className="w-4 h-4 text-slate-400 group-hover:text-teal-600 transition-colors shrink-0" />
               </div>
-              <div className="text-2xl font-black text-slate-900 mt-1">{countTodayTotal}</div>
-              <span className="text-[11px] text-teal-700 font-semibold mt-0.5 block">
+              <div className="text-xl sm:text-2xl font-black text-slate-900 mt-1">{countTodayTotal}</div>
+              <span className="text-[10px] sm:text-[11px] text-teal-700 font-semibold mt-0.5 block">
                 {countCompletedToday} Completed
               </span>
             </button>
@@ -390,56 +390,56 @@ export const DoctorPortal: React.FC = () => {
               onClick={() => {
                 setPatientStatusFilter('checked-in');
               }}
-              className="p-4 bg-white border border-slate-200 hover:border-sky-400 rounded-2xl text-left transition-all shadow-xs cursor-pointer group"
+              className="p-3 sm:p-4 bg-white border border-slate-200 hover:border-sky-400 rounded-2xl text-left transition-all shadow-xs cursor-pointer group"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   Waiting Lounge
                 </span>
-                <Clock className="w-4 h-4 text-sky-500" />
+                <Clock className="w-4 h-4 text-sky-500 shrink-0" />
               </div>
-              <div className="text-2xl font-black text-sky-600 mt-1">{countCheckedIn}</div>
-              <span className="text-[11px] text-slate-500 mt-0.5 block">Ready for chair</span>
+              <div className="text-xl sm:text-2xl font-black text-sky-600 mt-1">{countCheckedIn}</div>
+              <span className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5 block">Ready for chair</span>
             </button>
 
             <button
               onClick={() => {
                 setPatientStatusFilter('in-chair');
               }}
-              className="p-4 bg-white border border-slate-200 hover:border-purple-400 rounded-2xl text-left transition-all shadow-xs cursor-pointer group"
+              className="p-3 sm:p-4 bg-white border border-slate-200 hover:border-purple-400 rounded-2xl text-left transition-all shadow-xs cursor-pointer group"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   In Dental Chair
                 </span>
-                <Stethoscope className="w-4 h-4 text-purple-500" />
+                <Stethoscope className="w-4 h-4 text-purple-500 shrink-0" />
               </div>
-              <div className="text-2xl font-black text-purple-600 mt-1">{countInChair}</div>
-              <span className="text-[11px] text-purple-700 font-semibold mt-0.5 block">Active treatment</span>
+              <div className="text-xl sm:text-2xl font-black text-purple-600 mt-1">{countInChair}</div>
+              <span className="text-[10px] sm:text-[11px] text-purple-700 font-semibold mt-0.5 block">Active treatment</span>
             </button>
 
             <button
               onClick={() => {
                 setPatientStatusFilter('confirmed');
               }}
-              className="p-4 bg-white border border-slate-200 hover:border-teal-400 rounded-2xl text-left transition-all shadow-xs cursor-pointer group"
+              className="p-3 sm:p-4 bg-white border border-slate-200 hover:border-teal-400 rounded-2xl text-left transition-all shadow-xs cursor-pointer group"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   Confirmed / Booked
                 </span>
-                <CheckCircle2 className="w-4 h-4 text-teal-600" />
+                <CheckCircle2 className="w-4 h-4 text-teal-600 shrink-0" />
               </div>
-              <div className="text-2xl font-black text-teal-700 mt-1">{countConfirmed}</div>
-              <span className="text-[11px] text-slate-500 mt-0.5 block">
-                {countPending > 0 ? `${countPending} pending verification` : 'Up to date'}
+              <div className="text-xl sm:text-2xl font-black text-teal-700 mt-1">{countConfirmed}</div>
+              <span className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5 block truncate">
+                {countPending > 0 ? `${countPending} pending` : 'Up to date'}
               </span>
             </button>
           </div>
 
           {/* Search, Status Filter & Date Range Filter */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center space-x-3 flex-1 min-w-[260px]">
+          <div className="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-1">
               <div className="relative flex-1">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                 <input
@@ -447,7 +447,7 @@ export const DoctorPortal: React.FC = () => {
                   value={patientSearch}
                   onChange={(e) => setPatientSearch(e.target.value)}
                   placeholder="Search patient name, phone, symptom, or treatment..."
-                  className="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-hidden font-medium"
+                  className="w-full pl-9 pr-8 py-2 text-base sm:text-xs bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-hidden font-medium"
                 />
                 {patientSearch && (
                   <button
@@ -459,41 +459,199 @@ export const DoctorPortal: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex items-center space-x-1.5">
-                <Filter className="w-4 h-4 text-slate-400" />
-                <select
-                  value={patientStatusFilter}
-                  onChange={(e) => setPatientStatusFilter(e.target.value)}
-                  className="text-xs bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 font-medium"
-                >
-                  <option value="all">All Statuses</option>
-                  <option value="in-chair">In Chair (Active)</option>
-                  <option value="checked-in">Waiting in Lounge</option>
-                  <option value="confirmed">Confirmed / Scheduled</option>
-                  <option value="pending">Pending Verification</option>
-                  <option value="completed">Completed</option>
-                </select>
-              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center space-x-1.5 flex-1 sm:flex-none">
+                  <Filter className="w-4 h-4 text-slate-400 shrink-0 hidden sm:block" />
+                  <select
+                    value={patientStatusFilter}
+                    onChange={(e) => setPatientStatusFilter(e.target.value)}
+                    className="w-full text-base sm:text-xs bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 font-medium"
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="in-chair">In Chair (Active)</option>
+                    <option value="checked-in">Waiting in Lounge</option>
+                    <option value="confirmed">Confirmed / Scheduled</option>
+                    <option value="pending">Pending Verification</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
 
-              <div>
-                <select
-                  value={patientDateFilter}
-                  onChange={(e) => setPatientDateFilter(e.target.value)}
-                  className="text-xs bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 font-medium"
-                >
-                  <option value="today">Today Only ({todayStr})</option>
-                  <option value="all">All Dates Scheduled</option>
-                </select>
+                <div className="flex-1 sm:flex-none">
+                  <select
+                    value={patientDateFilter}
+                    onChange={(e) => setPatientDateFilter(e.target.value)}
+                    className="w-full text-base sm:text-xs bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-2 font-medium"
+                  >
+                    <option value="today">Today Only ({todayStr})</option>
+                    <option value="all">All Dates Scheduled</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            <div className="text-xs font-semibold text-slate-500">
+            <div className="text-xs font-semibold text-slate-500 shrink-0">
               Showing <span className="font-bold text-slate-900">{filteredAppointments.length}</span> patient(s)
             </div>
           </div>
 
-          {/* Patients Interactive Table */}
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+          {/* Mobile Patient Cards View (md:hidden) */}
+          <div className="md:hidden space-y-3">
+            {filteredAppointments.length === 0 ? (
+              <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center text-slate-400">
+                <AlertCircle className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                <p className="font-semibold text-slate-600">No appointments found matching your criteria</p>
+                <p className="text-[11px] text-slate-400 mt-1">Try resetting the search query or status filter</p>
+                <button
+                  onClick={() => {
+                    setPatientSearch('');
+                    setPatientStatusFilter('all');
+                    setPatientDateFilter('all');
+                  }}
+                  className="mt-3 px-3 py-1.5 rounded-xl bg-teal-50 text-teal-700 font-bold text-xs hover:bg-teal-100 transition-colors"
+                >
+                  Reset Filters
+                </button>
+              </div>
+            ) : (
+              filteredAppointments.map((apt) => {
+                const isDone = apt.status === 'completed';
+                const isInChair = apt.status === 'in-chair';
+                const isPending = apt.status === 'pending';
+
+                return (
+                  <div
+                    key={apt.id}
+                    className={`bg-white border rounded-2xl p-4 shadow-xs space-y-3 transition-colors ${
+                      isInChair ? 'border-purple-300 bg-purple-50/20' : 'border-slate-200'
+                    }`}
+                  >
+                    {/* Top Row: Time & Status */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1.5 text-xs">
+                        <span className="font-extrabold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg">
+                          {apt.time}
+                        </span>
+                        <span className="text-[11px] text-slate-400 font-mono">
+                          {apt.date}
+                        </span>
+                      </div>
+
+                      <div>
+                        {isInChair && (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200 animate-pulse flex items-center space-x-1">
+                            <Stethoscope className="w-3 h-3" />
+                            <span>In Chair</span>
+                          </span>
+                        )}
+                        {apt.status === 'checked-in' && (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-200">
+                            Waiting in Lounge
+                          </span>
+                        )}
+                        {(apt.status === 'confirmed' || apt.status === 'scheduled') && (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 border border-teal-200">
+                            Confirmed
+                          </span>
+                        )}
+                        {isPending && (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                            Pending Verification
+                          </span>
+                        )}
+                        {isDone && (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            Completed
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Patient Info & Call button */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <strong className="text-slate-900 font-bold block text-base">
+                          {apt.patientName}
+                        </strong>
+                        <span className="text-xs font-semibold text-teal-800 block mt-0.5">
+                          {apt.service}
+                        </span>
+                        {apt.notes && (
+                          <p className="mt-1 text-[11px] text-slate-600 bg-slate-100 px-2 py-1 rounded-md italic">
+                            "{apt.notes}"
+                          </p>
+                        )}
+                      </div>
+
+                      <a
+                        href={`tel:${apt.patientPhone}`}
+                        className="p-2.5 rounded-xl bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200/60 transition-colors shrink-0 flex items-center justify-center min-w-[40px] min-h-[40px]"
+                        title="Call patient"
+                      >
+                        <Phone className="w-4 h-4" />
+                      </a>
+                    </div>
+
+                    {/* Operatory Action Buttons */}
+                    <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-2">
+                      {/* Write Rx */}
+                      <button
+                        onClick={() => handleSelectPatientForRx(apt)}
+                        className="flex-1 min-h-[40px] px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs transition-colors shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>Write Rx</span>
+                      </button>
+
+                      {/* Chair control */}
+                      {!isDone && !isInChair && (
+                        <button
+                          onClick={() => updateAppointmentStatus(apt.id, 'in-chair')}
+                          className="flex-1 min-h-[40px] px-3 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold text-xs transition-colors cursor-pointer flex items-center justify-center space-x-1.5"
+                        >
+                          <Stethoscope className="w-3.5 h-3.5 text-purple-600" />
+                          <span>To Chair</span>
+                        </button>
+                      )}
+
+                      {/* Complete control */}
+                      {!isDone && isInChair && (
+                        <button
+                          onClick={() => updateAppointmentStatus(apt.id, 'completed')}
+                          className="flex-1 min-h-[40px] px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs cursor-pointer flex items-center justify-center space-x-1.5"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Mark Done</span>
+                        </button>
+                      )}
+
+                      {/* Pending Confirm control */}
+                      {isPending && (
+                        <button
+                          onClick={() => updateAppointmentStatus(apt.id, 'confirmed')}
+                          className="min-h-[40px] px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-xs transition-colors cursor-pointer"
+                        >
+                          Confirm
+                        </button>
+                      )}
+
+                      {/* Digital Slip Download Button */}
+                      <button
+                        onClick={() => handleDownloadPatientSlip(apt)}
+                        className="min-h-[40px] px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 font-bold text-xs transition-colors cursor-pointer flex items-center justify-center space-x-1"
+                        title="Download digital appointment pass"
+                      >
+                        <Download className="w-3.5 h-3.5 text-slate-500" />
+                        <span>Slip</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Desktop Patients Interactive Table */}
+          <div className="hidden md:block bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200">
@@ -699,7 +857,7 @@ export const DoctorPortal: React.FC = () => {
                       const chosen = appointments.find((a) => a.id === e.target.value);
                       if (chosen?.service) setRxDiagnosis(chosen.service);
                     }}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900 text-xs focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900 text-base sm:text-xs focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
                   >
                     {appointments.map((a) => (
                       <option key={a.id} value={a.id}>
@@ -717,7 +875,7 @@ export const DoctorPortal: React.FC = () => {
                       value={patientAge}
                       onChange={(e) => setPatientAge(e.target.value)}
                       placeholder="e.g. 34"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-xs"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-base sm:text-xs"
                     />
                   </div>
 
@@ -726,7 +884,7 @@ export const DoctorPortal: React.FC = () => {
                     <select
                       value={patientGender}
                       onChange={(e) => setPatientGender(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-xs"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-base sm:text-xs"
                     >
                       <option value="Female">Female</option>
                       <option value="Male">Male</option>
@@ -742,7 +900,7 @@ export const DoctorPortal: React.FC = () => {
                     value={rxDiagnosis}
                     onChange={(e) => setRxDiagnosis(e.target.value)}
                     placeholder="e.g. Periodontitis & Deep Pocketing, Root Canal Therapy"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium text-xs focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium text-base sm:text-xs focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
                   />
                 </div>
 
@@ -768,7 +926,7 @@ export const DoctorPortal: React.FC = () => {
                       min={getLocalDateString()}
                       value={rxFollowUp}
                       onChange={(e) => setRxFollowUp(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium text-xs focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium text-base sm:text-xs focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
                     />
                   </div>
                   <p className="text-[10px] text-slate-400 mt-1">
@@ -785,7 +943,7 @@ export const DoctorPortal: React.FC = () => {
                     value={rxAdvice}
                     onChange={(e) => setRxAdvice(e.target.value)}
                     placeholder="Post-op instructions, dietary precautions, oral hygiene..."
-                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs leading-relaxed focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-base sm:text-xs leading-relaxed focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
                   />
                 </div>
               </div>
@@ -1271,9 +1429,10 @@ export const DoctorPortal: React.FC = () => {
 
       {/* MODAL 1: ADD / MANAGE QUICK PRESETS MODAL */}
       {isManagePresetsOpen && (
-        <div className="no-print fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
+        <div className="no-print fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden max-h-[92vh] sm:max-h-[90vh] flex flex-col">
+            <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2 sm:hidden shrink-0" />
+            <div className="bg-slate-900 text-white p-4 sm:p-5 flex items-center justify-between shrink-0">
               <div className="flex items-center space-x-2">
                 <Sparkles className="w-5 h-5 text-teal-400" />
                 <h3 className="font-bold text-sm text-white">
@@ -1288,7 +1447,7 @@ export const DoctorPortal: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-6 text-xs">
+            <div className="p-4 sm:p-6 overflow-y-auto space-y-6 text-xs">
               {/* Add New Preset Form */}
               <form onSubmit={handleSaveNewPreset} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
                 <strong className="text-slate-900 font-bold block text-sm">
@@ -1304,7 +1463,7 @@ export const DoctorPortal: React.FC = () => {
                       value={presetDrugName}
                       onChange={(e) => setPresetDrugName(e.target.value)}
                       placeholder="e.g. Dolo 650mg"
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-base sm:text-xs"
                     />
                   </div>
 
@@ -1315,7 +1474,7 @@ export const DoctorPortal: React.FC = () => {
                       value={presetGenericName}
                       onChange={(e) => setPresetGenericName(e.target.value)}
                       placeholder="e.g. Paracetamol 650mg"
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-base sm:text-xs"
                     />
                   </div>
 
@@ -1326,7 +1485,7 @@ export const DoctorPortal: React.FC = () => {
                       value={presetDosage}
                       onChange={(e) => setPresetDosage(e.target.value)}
                       placeholder="e.g. 1 tab / 650mg"
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-base sm:text-xs"
                     />
                   </div>
 
@@ -1337,7 +1496,7 @@ export const DoctorPortal: React.FC = () => {
                       value={presetFrequency}
                       onChange={(e) => setPresetFrequency(e.target.value)}
                       placeholder="e.g. 1-0-1 (After food)"
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-base sm:text-xs"
                     />
                   </div>
 
@@ -1348,7 +1507,7 @@ export const DoctorPortal: React.FC = () => {
                       value={presetDuration}
                       onChange={(e) => setPresetDuration(e.target.value)}
                       placeholder="e.g. 3 days"
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-base sm:text-xs"
                     />
                   </div>
 
@@ -1359,7 +1518,7 @@ export const DoctorPortal: React.FC = () => {
                       value={presetInstructions}
                       onChange={(e) => setPresetInstructions(e.target.value)}
                       placeholder="e.g. Take after meals for fever/pain"
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-base sm:text-xs"
                     />
                   </div>
                 </div>
@@ -1367,7 +1526,7 @@ export const DoctorPortal: React.FC = () => {
                 <div className="flex justify-end pt-1">
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl flex items-center space-x-1.5 shadow-xs cursor-pointer"
+                    className="w-full sm:w-auto px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl flex items-center justify-center space-x-1.5 shadow-xs cursor-pointer min-h-[44px]"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Save to Quick Add Menu</span>
@@ -1397,7 +1556,7 @@ export const DoctorPortal: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => removeQuickDrugPreset(preset.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                        className="p-2 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
                         title="Delete Preset"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -1408,11 +1567,11 @@ export const DoctorPortal: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end shrink-0">
               <button
                 type="button"
                 onClick={() => setIsManagePresetsOpen(false)}
-                className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer min-h-[44px]"
               >
                 Done
               </button>
@@ -1423,9 +1582,10 @@ export const DoctorPortal: React.FC = () => {
 
       {/* MODAL 2: ADD CUSTOM MEDICINE TO PRESCRIPTION SLIP */}
       {isAddCustomMedOpen && (
-        <div className="no-print fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
-            <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
+        <div className="no-print fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden max-h-[92vh] flex flex-col">
+            <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2 sm:hidden shrink-0" />
+            <div className="bg-slate-900 text-white p-4 sm:p-5 flex items-center justify-between shrink-0">
               <h3 className="font-bold text-sm text-white flex items-center space-x-1.5">
                 <Plus className="w-4 h-4 text-teal-400" />
                 <span>Add Medication to Prescription</span>
@@ -1438,7 +1598,7 @@ export const DoctorPortal: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleAddCustomMedicineToSlip} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleAddCustomMedicineToSlip} className="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto">
               <div>
                 <label className="font-bold text-slate-700 block mb-1">Medicine / Drug Name *</label>
                 <input
@@ -1447,7 +1607,7 @@ export const DoctorPortal: React.FC = () => {
                   value={customDrugName}
                   onChange={(e) => setCustomDrugName(e.target.value)}
                   placeholder="e.g. Amox 500mg, Metrogyl 400mg, Ketorol DT"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-base sm:text-xs"
                 />
               </div>
 
@@ -1458,7 +1618,7 @@ export const DoctorPortal: React.FC = () => {
                   value={customGenericName}
                   onChange={(e) => setCustomGenericName(e.target.value)}
                   placeholder="e.g. Metronidazole 400mg"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-base sm:text-xs"
                 />
               </div>
 
@@ -1470,7 +1630,7 @@ export const DoctorPortal: React.FC = () => {
                     value={customDosage}
                     onChange={(e) => setCustomDosage(e.target.value)}
                     placeholder="e.g. 1 tab"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-base sm:text-xs"
                   />
                 </div>
 
@@ -1481,7 +1641,7 @@ export const DoctorPortal: React.FC = () => {
                     value={customFrequency}
                     onChange={(e) => setCustomFrequency(e.target.value)}
                     placeholder="e.g. 1-0-1 (Twice daily)"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-base sm:text-xs"
                   />
                 </div>
               </div>
@@ -1494,7 +1654,7 @@ export const DoctorPortal: React.FC = () => {
                     value={customDuration}
                     onChange={(e) => setCustomDuration(e.target.value)}
                     placeholder="e.g. 5 days"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-base sm:text-xs"
                   />
                 </div>
 
@@ -1505,7 +1665,7 @@ export const DoctorPortal: React.FC = () => {
                     value={customInstructions}
                     onChange={(e) => setCustomInstructions(e.target.value)}
                     placeholder="e.g. Take after meals"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-base sm:text-xs"
                   />
                 </div>
               </div>
@@ -1514,13 +1674,13 @@ export const DoctorPortal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsAddCustomMedOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer"
+                  className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer min-h-[44px]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold shadow-xs cursor-pointer"
+                  className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold shadow-xs cursor-pointer min-h-[44px]"
                 >
                   Add to Slip
                 </button>
@@ -1532,9 +1692,10 @@ export const DoctorPortal: React.FC = () => {
 
       {/* MODAL 3: ADD DOCTOR MODAL */}
       {isAddDoctorOpen && (
-        <div className="no-print fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
-            <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
+        <div className="no-print fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden max-h-[92vh] flex flex-col">
+            <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2 sm:hidden shrink-0" />
+            <div className="bg-slate-900 text-white p-4 sm:p-5 flex items-center justify-between shrink-0">
               <h3 className="font-bold text-sm text-white">Add New Doctor Profile</h3>
               <button
                 onClick={() => setIsAddDoctorOpen(false)}
@@ -1544,7 +1705,7 @@ export const DoctorPortal: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleCreateDoctor} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleCreateDoctor} className="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto">
               <div>
                 <label className="font-bold text-slate-700 block mb-1">Doctor Full Name *</label>
                 <input
@@ -1553,7 +1714,7 @@ export const DoctorPortal: React.FC = () => {
                   value={newDocName}
                   onChange={(e) => setNewDocName(e.target.value)}
                   placeholder="e.g. Dr. Priya Kulkarni"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-base sm:text-xs"
                 />
               </div>
 
@@ -1563,7 +1724,7 @@ export const DoctorPortal: React.FC = () => {
                   type="text"
                   value={newDocSpecialization}
                   onChange={(e) => setNewDocSpecialization(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-base sm:text-xs"
                 />
               </div>
 
@@ -1573,7 +1734,7 @@ export const DoctorPortal: React.FC = () => {
                   type="text"
                   value={newDocQualification}
                   onChange={(e) => setNewDocQualification(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-base sm:text-xs"
                 />
               </div>
 
@@ -1583,7 +1744,7 @@ export const DoctorPortal: React.FC = () => {
                   type="number"
                   value={newDocFee}
                   onChange={(e) => setNewDocFee(Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-base sm:text-xs"
                 />
               </div>
 
@@ -1595,13 +1756,13 @@ export const DoctorPortal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsAddDoctorOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer"
+                  className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer min-h-[44px]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold cursor-pointer"
+                  className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold cursor-pointer min-h-[44px]"
                 >
                   Add Doctor
                 </button>

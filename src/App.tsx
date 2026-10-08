@@ -11,6 +11,8 @@ import { LoginModal } from './components/auth/LoginModal';
 import { QuickBookingModal } from './components/public/QuickBookingModal';
 import { AddReviewModal } from './components/public/AddReviewModal';
 
+import { MobileBottomNav } from './components/common/MobileBottomNav';
+
 const AppContent: React.FC = () => {
   const { activeView, clinicInfo } = useApp();
 
@@ -18,7 +20,7 @@ const AppContent: React.FC = () => {
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
       <Navbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 md:pb-6">
         {activeView === 'public-home' && <PublicHome />}
         {activeView === 'doctor-info' && <DoctorInfoPage />}
         {activeView === 'reception-desk' && <ReceptionDashboard />}
@@ -31,7 +33,7 @@ const AppContent: React.FC = () => {
       <AddReviewModal />
 
       {/* Clean Global Clinical Footer */}
-      <footer className="no-print bg-slate-950 text-slate-400 border-t border-slate-800 text-xs py-8 mt-12">
+      <footer className="no-print bg-slate-950 text-slate-400 border-t border-slate-800 text-xs py-8 mt-12 mb-16 md:mb-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <span className="font-serif font-bold text-white tracking-wider text-sm">
@@ -47,6 +49,9 @@ const AppContent: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* Floating Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 };

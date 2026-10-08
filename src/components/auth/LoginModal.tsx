@@ -72,13 +72,14 @@ export const LoginModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in">
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md max-h-[92vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="bg-slate-900 text-white p-6 relative">
+        <div className="bg-slate-900 text-white p-5 sm:p-6 relative shrink-0">
+          <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-2.5 block sm:hidden" />
           <button
             onClick={handleClose}
-            className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="absolute top-4 sm:top-5 right-4 sm:right-5 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -86,7 +87,7 @@ export const LoginModal: React.FC = () => {
             <Lock className="w-3.5 h-3.5" />
             <span>Staff Portal Access</span>
           </div>
-          <h3 className="text-xl font-bold text-white">
+          <h3 className="text-lg sm:text-xl font-bold text-white">
             {isSettingNewPassword ? 'Create Your Confidential Password' : 'Staff Login'}
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
@@ -98,7 +99,7 @@ export const LoginModal: React.FC = () => {
 
         {/* Error Notice */}
         {error && (
-          <div className="mx-6 mt-4 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center space-x-2">
+          <div className="mx-5 sm:mx-6 mt-4 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center space-x-2 shrink-0">
             <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
             <span>{error}</span>
           </div>
@@ -106,18 +107,18 @@ export const LoginModal: React.FC = () => {
 
         {/* STEP 1: INITIAL LOGIN FORM */}
         {!isSettingNewPassword ? (
-          <form onSubmit={handleLoginSubmit} className="p-6 space-y-4 text-xs">
+          <form onSubmit={handleLoginSubmit} className="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto flex-1">
             <div>
               <label className="font-bold text-slate-700 block mb-1">Staff Username</label>
               <div className="relative">
-                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 sm:top-3" />
                 <input
                   type="text"
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="e.g. doctor or receptionist"
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-hidden text-xs font-medium"
+                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-hidden text-base sm:text-xs font-medium"
                 />
               </div>
             </div>
@@ -125,14 +126,14 @@ export const LoginModal: React.FC = () => {
             <div>
               <label className="font-bold text-slate-700 block mb-1">Password</label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 sm:top-3" />
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter password"
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-hidden text-xs font-medium"
+                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-hidden text-base sm:text-xs font-medium"
                 />
               </div>
             </div>
@@ -155,7 +156,7 @@ export const LoginModal: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow-md transition-colors flex items-center justify-center space-x-2"
+              className="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all active:scale-95 touch-manipulation flex items-center justify-center space-x-2 mt-2"
             >
               <span>Login to Workspace</span>
               <ArrowRight className="w-4 h-4" />
@@ -163,7 +164,7 @@ export const LoginModal: React.FC = () => {
           </form>
         ) : (
           /* STEP 2: CREATE FIRST-TIME CONFIDENTIAL PASSWORD */
-          <form onSubmit={handleSetPasswordSubmit} className="p-6 space-y-4 text-xs">
+          <form onSubmit={handleSetPasswordSubmit} className="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto flex-1">
             <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-xs flex items-start space-x-2">
               <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
               <div>
@@ -178,14 +179,14 @@ export const LoginModal: React.FC = () => {
             <div>
               <label className="font-bold text-slate-700 block mb-1">New Confidential Password</label>
               <div className="relative">
-                <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 sm:top-3" />
                 <input
                   type="password"
                   required
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Enter new strong password"
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden text-xs font-medium"
+                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden text-base sm:text-xs font-medium"
                 />
               </div>
             </div>
@@ -193,21 +194,21 @@ export const LoginModal: React.FC = () => {
             <div>
               <label className="font-bold text-slate-700 block mb-1">Confirm New Password</label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 sm:top-3" />
                 <input
                   type="password"
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Re-type new password"
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden text-xs font-medium"
+                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-hidden text-base sm:text-xs font-medium"
                 />
               </div>
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-colors flex items-center justify-center space-x-2"
+              className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all active:scale-95 touch-manipulation flex items-center justify-center space-x-2 mt-2"
             >
               <span>Save Password & Enter Portal</span>
               <ShieldCheck className="w-4 h-4" />

@@ -11,7 +11,7 @@ import { getLocalDateString } from '../utils/dateUtils';
 export const CLINIC_INFO: ClinicInfo = {
   name: 'Classic Smile Dental Care & Implant Centre',
   tagline: 'Your step towards dental wellness',
-  clinicType: 'Dental Care & Implant Centre | Multispeciality Dental Clinic',
+  clinicType: 'Dental Care & Implant Centre',
   specialization: 'Periodontist & Oral Implantologist',
   address: 'Shop No. 18, T Wing, Tanish Orchid, 1st Floor, Charholi Bk., Charholi Road',
   area: 'Chovisawadi / Charholi Budruk, Pimpri-Chinchwad',
@@ -37,7 +37,7 @@ export const INITIAL_STAFF_USERS: StaffUser[] = [
     password: 'admin1234', // Default password requiring reset on first login
     isDefaultPassword: true,
     isActive: true,
-    avatar: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=400',
+    avatar: '/doc_img.jpeg',
     doctorId: 'doc-abhishek',
   },
   {
@@ -61,7 +61,7 @@ export const INITIAL_DOCTORS: Doctor[] = [
     qualification: 'BDS, MDS',
     registration: 'A-43344',
     experienceYears: 12,
-    avatar: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=400',
+    avatar: '/doc_img.jpeg',
     bio: 'Renowned Periodontist & Oral Implantologist (Reg: A-43344) with MDS degree, specializing in dental implants, soft tissue surgery, gum rejuvenation, and full mouth multispeciality oral wellness.',
     consultationFee: 600,
     rating: 4.9,

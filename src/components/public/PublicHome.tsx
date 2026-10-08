@@ -48,6 +48,15 @@ export const PublicHome: React.FC = () => {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [selectedConcern, setSelectedConcern] = useState(0);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(0);
+  const sliderRef = React.useRef<HTMLDivElement>(null);
+
+  const updateSliderFromClientX = (clientX: number) => {
+    if (!sliderRef.current) return;
+    const rect = sliderRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const pct = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    setSliderPosition(Math.round(pct));
+  };
 
   const leadDoctor = doctors[0];
 
@@ -180,82 +189,74 @@ export const PublicHome: React.FC = () => {
   return (
     <div className="space-y-16 pb-12">
       {/* HERO SECTION */}
-      <section className="relative overflow-hidden bg-slate-950 text-white rounded-3xl p-6 sm:p-12 lg:p-16 border border-slate-800 shadow-2xl">
+      <section className="relative overflow-hidden bg-slate-950 text-white rounded-3xl p-5 sm:p-12 lg:p-16 border border-slate-800 shadow-2xl">
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-sky-500/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-teal-500/15 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          <div className="lg:col-span-7 space-y-6">
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-teal-300 text-xs font-bold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5 text-teal-400" />
-              <span>{clinicInfo.clinicType} • Charholi, Pune</span>
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
+          <div className="lg:col-span-7 space-y-4 sm:space-y-6">
+            <div className="inline-flex max-w-full items-center space-x-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-teal-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+              <span className="hidden sm:inline truncate">{clinicInfo.clinicType} • Charholi, Pune</span>
+              <span className="sm:hidden truncate">Dental & Implant Clinic • Charholi</span>
             </div>
 
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-black tracking-tight text-white leading-tight">
+            <h1 className="text-2xl sm:text-5xl lg:text-6xl font-serif font-black tracking-tight text-white leading-tight">
               {clinicInfo.name}
             </h1>
 
-            <p className="text-teal-300 font-serif italic text-lg sm:text-xl">
+            <p className="text-teal-300 font-serif italic text-base sm:text-xl">
               "{clinicInfo.tagline}"
             </p>
 
-            <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-xl">
+            <p className="text-slate-300 text-xs sm:text-base leading-relaxed max-w-xl">
               Led by <strong>{leadDoctor?.name}</strong>, BDS, MDS (Periodontist & Oral Implantologist, Reg. No: A-43344). Expert clinical care for painless dental implants, advanced gum surgery, single-sitting root canals, and modern smile transformations in Charholi Bk., Pune.
             </p>
 
             {/* Quick Action Buttons */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+            <div className="space-y-2.5 pt-1 sm:pt-2">
               <button
                 onClick={() => setIsBookingModalOpen(true)}
-                className="px-6 py-3.5 rounded-2xl bg-linear-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white font-bold text-xs sm:text-sm shadow-xl shadow-sky-500/20 hover:scale-105 transition-all flex items-center space-x-2 cursor-pointer"
+                className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-linear-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white font-bold text-xs sm:text-sm shadow-xl shadow-sky-500/20 active:scale-95 transition-all flex items-center justify-center space-x-2 cursor-pointer"
               >
-                <Calendar className="w-4 h-4" />
+                <Calendar className="w-4 h-4 shrink-0" />
                 <span>Book Appointment (Instant Slot)</span>
               </button>
 
-              <a
-                href={`tel:${clinicInfo.phone.replace(/\s+/g, '')}`}
-                className="px-5 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-semibold text-xs sm:text-sm transition-colors flex items-center space-x-2"
-              >
-                <Phone className="w-4 h-4 text-teal-400" />
-                <span>{clinicInfo.phone}</span>
-              </a>
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
+                <a
+                  href={`tel:${clinicInfo.phone.replace(/[^0-9+]/g, '')}`}
+                  className="px-3.5 py-2.5 sm:px-5 sm:py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-semibold text-xs sm:text-sm transition-colors flex items-center justify-center space-x-2 active:scale-95"
+                >
+                  <Phone className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                  <span className="truncate">{clinicInfo.phone}</span>
+                </a>
 
-              <a
-                href={clinicInfo.mapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-semibold text-xs transition-colors flex items-center space-x-1.5"
-              >
-                <MapPin className="w-4 h-4 text-rose-400" />
-                <span>Find on Maps</span>
-                <ExternalLink className="w-3 h-3 text-slate-400" />
-              </a>
-
-              <button
-                onClick={() => setActiveView('doctor-info')}
-                className="px-4 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-teal-300 border border-teal-500/30 font-semibold text-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
-              >
-                <Award className="w-4 h-4 text-teal-400" />
-                <span>Doctor Credentials</span>
-              </button>
+                <button
+                  onClick={() => setActiveView('doctor-info')}
+                  className="px-3.5 py-2.5 sm:px-4 sm:py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-teal-300 border border-teal-500/30 font-semibold text-xs transition-colors flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95"
+                >
+                  <Award className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                  <span>Doctor Profile</span>
+                </button>
+              </div>
             </div>
 
             {/* Trust Metrics */}
-            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-slate-800/80">
-              <div>
-                <strong className="text-2xl sm:text-3xl font-black text-white block">12+</strong>
-                <span className="text-[11px] text-slate-400 uppercase font-semibold">Years Clinical Exp</span>
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-4 sm:pt-6 border-t border-slate-800/80 text-center sm:text-left">
+              <div className="p-2 sm:p-0 bg-slate-900/60 sm:bg-transparent rounded-xl">
+                <strong className="text-xl sm:text-3xl font-black text-white block">12+</strong>
+                <span className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold leading-tight block">Years Exp</span>
               </div>
-              <div>
-                <strong className="text-2xl sm:text-3xl font-black text-teal-400 block">150+</strong>
-                <span className="text-[11px] text-slate-400 uppercase font-semibold">Verified Reviews</span>
+              <div className="p-2 sm:p-0 bg-slate-900/60 sm:bg-transparent rounded-xl">
+                <strong className="text-xl sm:text-3xl font-black text-teal-400 block">150+</strong>
+                <span className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold leading-tight block">Reviews</span>
               </div>
-              <div>
-                <strong className="text-2xl sm:text-3xl font-black text-amber-400 flex items-center">
-                  4.9 <Star className="w-4 h-4 ml-1 fill-amber-400 text-amber-400" />
+              <div className="p-2 sm:p-0 bg-slate-900/60 sm:bg-transparent rounded-xl">
+                <strong className="text-xl sm:text-3xl font-black text-amber-400 flex items-center justify-center sm:justify-start">
+                  4.9 <Star className="w-3.5 h-3.5 ml-1 fill-amber-400 text-amber-400 shrink-0" />
                 </strong>
-                <span className="text-[11px] text-slate-400 uppercase font-semibold">Google Rating</span>
+                <span className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold leading-tight block">Google Rating</span>
               </div>
             </div>
           </div>
@@ -265,9 +266,12 @@ export const PublicHome: React.FC = () => {
             <div className="relative bg-slate-900 border border-slate-800 rounded-3xl p-4 shadow-2xl max-w-sm w-full">
               <div className="h-80 sm:h-96 rounded-2xl overflow-hidden relative">
                 <img
-                  src={leadDoctor?.avatar}
-                  alt={leadDoctor?.name}
+                  src={leadDoctor?.avatar && !leadDoctor.avatar.includes('images.unsplash.com') ? leadDoctor.avatar : '/doc_img.jpeg'}
+                  alt={leadDoctor?.name || 'Dr. Abhishek V. Kamble'}
                   className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-500"
+                  onError={(e) => {
+                    e.currentTarget.src = '/doc_img.jpeg';
+                  }}
                 />
                 <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-slate-950 via-slate-950/80 to-transparent p-5 text-white">
                   <span className="text-[10px] font-bold text-teal-400 uppercase tracking-widest block">
@@ -325,12 +329,12 @@ export const PublicHome: React.FC = () => {
         </div>
 
         {/* Concern Selector Tabs */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+        <div className="flex sm:grid sm:grid-cols-5 overflow-x-auto no-scrollbar snap-x snap-mandatory gap-2 pb-1.5">
           {dentalConcerns.map((c) => (
             <button
               key={c.id}
               onClick={() => setSelectedConcern(c.id)}
-              className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+              className={`shrink-0 w-44 sm:w-auto snap-start p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between active:scale-95 touch-manipulation ${
                 selectedConcern === c.id
                   ? 'bg-teal-600 text-white border-teal-600 shadow-md scale-[1.02]'
                   : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
@@ -630,40 +634,57 @@ export const PublicHome: React.FC = () => {
           </div>
 
           {/* Interactive Comparison Slider */}
-          <div className="lg:col-span-7 bg-slate-950 p-4 rounded-2xl border border-slate-800">
-            <div className="relative h-72 sm:h-80 rounded-xl overflow-hidden select-none">
+          <div className="lg:col-span-7 bg-slate-950 p-3 sm:p-4 rounded-2xl border border-slate-800">
+            <div
+              ref={sliderRef}
+              onPointerDown={(e) => {
+                try {
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                } catch {}
+                updateSliderFromClientX(e.clientX);
+              }}
+              onPointerMove={(e) => {
+                if (e.buttons > 0) {
+                  updateSliderFromClientX(e.clientX);
+                }
+              }}
+              onTouchMove={(e) => {
+                if (e.touches[0]) {
+                  updateSliderFromClientX(e.touches[0].clientX);
+                }
+              }}
+              className="relative h-64 sm:h-80 rounded-xl overflow-hidden select-none touch-none cursor-ew-resize shadow-inner"
+            >
               {/* After Image */}
               <img
                 src="https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&q=80&w=800"
                 alt="After Transformation"
-                className="absolute inset-0 w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
               />
-              <span className="absolute top-3 right-3 bg-teal-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase shadow-md">
+              <span className="absolute top-3 right-3 bg-teal-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase shadow-md pointer-events-none">
                 Post-Treatment Smile
               </span>
 
-              {/* Before Image (Clipped) */}
-              <div
-                className="absolute inset-0 overflow-hidden"
-                style={{ width: `${sliderPosition}%` }}
+              {/* Before Image with GPU-accelerated clip-path */}
+              <img
+                src="https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800"
+                alt="Before"
+                className="absolute inset-0 w-full h-full object-cover filter grayscale contrast-125 pointer-events-none transition-[clip-path]"
+                style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
+              />
+              <span
+                className="absolute top-3 left-3 bg-slate-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase shadow-md pointer-events-none transition-opacity"
+                style={{ opacity: sliderPosition > 18 ? 1 : 0 }}
               >
-                <img
-                  src="https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800"
-                  alt="Before"
-                  className="absolute inset-0 w-full h-full object-cover filter grayscale contrast-125"
-                  style={{ width: '100%', minWidth: '400px' }}
-                />
-                <span className="absolute top-3 left-3 bg-slate-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase shadow-md">
-                  Pre-Op Baseline
-                </span>
-              </div>
+                Pre-Op Baseline
+              </span>
 
               {/* Divider Handle */}
               <div
-                className="absolute top-0 bottom-0 w-1 bg-white flex items-center justify-center cursor-ew-resize"
+                className="absolute top-0 bottom-0 w-0.5 bg-white flex items-center justify-center pointer-events-none shadow-2xl"
                 style={{ left: `${sliderPosition}%` }}
               >
-                <div className="w-7 h-7 rounded-full bg-white text-slate-950 shadow-xl flex items-center justify-center text-[9px] font-black">
+                <div className="w-8 h-8 rounded-full bg-white text-slate-950 shadow-2xl flex items-center justify-center text-[9px] font-black border-2 border-teal-500">
                   ◀▶
                 </div>
               </div>
@@ -676,11 +697,11 @@ export const PublicHome: React.FC = () => {
                 max="100"
                 value={sliderPosition}
                 onChange={(e) => setSliderPosition(Number(e.target.value))}
-                className="w-full accent-teal-400 cursor-pointer"
+                className="w-full accent-teal-400 cursor-pointer h-2 bg-slate-800 rounded-lg touch-manipulation"
               />
-              <div className="flex justify-between text-[10px] text-slate-400">
-                <span>◀ Slide left for Pre-Op</span>
-                <span>Slide right for Post-Op ▶</span>
+              <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+                <span>◀ Drag across image for Pre-Op</span>
+                <span>Drag for Post-Op ▶</span>
               </div>
             </div>
           </div>
@@ -712,11 +733,11 @@ export const PublicHome: React.FC = () => {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="flex md:grid md:grid-cols-2 lg:grid-cols-4 overflow-x-auto md:overflow-visible no-scrollbar snap-x snap-mandatory gap-4 pb-2">
           {reviews.map((rev) => (
             <div
               key={rev.id}
-              className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between"
+              className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between shrink-0 w-[82vw] max-w-xs md:w-auto snap-start active:scale-[0.99] transition-transform"
             >
               <div>
                 <div className="flex items-center space-x-1 text-amber-400 mb-2">
@@ -768,7 +789,7 @@ export const PublicHome: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setExpandedFaq(isOpen ? null : index)}
-                  className="w-full p-4 sm:p-5 text-left bg-slate-50/50 hover:bg-slate-50 flex items-center justify-between gap-4 font-bold text-xs sm:text-sm text-slate-900 cursor-pointer"
+                  className="w-full p-4 sm:p-5 text-left bg-slate-50/50 hover:bg-slate-50 flex items-center justify-between gap-4 font-bold text-xs sm:text-sm text-slate-900 cursor-pointer active:bg-slate-100 touch-manipulation"
                 >
                   <span className="flex items-center space-x-2.5">
                     <HelpCircle className="w-4 h-4 text-teal-600 shrink-0" />
@@ -875,7 +896,7 @@ export const PublicHome: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-2">
               <button
                 onClick={() => setIsBookingModalOpen(true)}
-                className="flex-1 py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-md transition-colors flex items-center justify-center space-x-2 cursor-pointer"
+                className="flex-1 py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-md transition-colors flex items-center justify-center space-x-2 cursor-pointer active:scale-95 touch-manipulation"
               >
                 <Calendar className="w-4 h-4" />
                 <span>Book Appointment</span>
@@ -885,7 +906,7 @@ export const PublicHome: React.FC = () => {
                 href={clinicInfo.mapUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors flex items-center justify-center space-x-1.5"
+                className="py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors flex items-center justify-center space-x-1.5 active:scale-95 touch-manipulation"
               >
                 <span>Google Maps</span>
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -894,7 +915,7 @@ export const PublicHome: React.FC = () => {
           </div>
 
           {/* User-provided Authentic Google Maps Iframe */}
-          <div className="lg:col-span-7 h-80 sm:h-96 rounded-2xl overflow-hidden border border-slate-300 shadow-sm relative">
+          <div className="lg:col-span-7 h-72 sm:h-96 rounded-2xl overflow-hidden border border-slate-300 shadow-sm relative group">
             <iframe
               title="Classic Smile Dental Care & Implant Centre Google Maps Location"
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3893.290966957671!2d73.89516660000001!3d18.660168399999996!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2c7d3a3b77d87%3A0x98a77e38c14f44d5!2sClassic%20Smile%20Dental%20Care%20%26%20Implant%20Centre%20(Periodontist%20%26%20Implantologist)!5e1!3m2!1sen!2sin!4v1791396156704!5m2!1sen!2sin"
@@ -904,8 +925,18 @@ export const PublicHome: React.FC = () => {
               allowFullScreen={false}
               loading="lazy"
               referrerPolicy="strict-origin-when-cross-origin"
-              className="w-full h-full"
+              className="w-full h-full pointer-events-none md:pointer-events-auto"
             />
+            {/* Mobile tap overlay to prevent scroll trapping */}
+            <a
+              href={clinicInfo.mapUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="md:hidden absolute bottom-3 right-3 bg-slate-950/90 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl shadow-lg border border-slate-700 flex items-center space-x-1.5"
+            >
+              <span>Open in Google Maps</span>
+              <ExternalLink className="w-3 h-3 text-teal-400" />
+            </a>
           </div>
         </div>
       </section>

@@ -75,6 +75,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 const STORAGE_PREFIX = 'classicsmile_v2_';
 
 function loadFromStorage<T>(key: string, fallback: T): T {
+  if (typeof window === 'undefined') return fallback;
   try {
     const item = localStorage.getItem(STORAGE_PREFIX + key);
     return item ? JSON.parse(item) : fallback;
@@ -84,6 +85,7 @@ function loadFromStorage<T>(key: string, fallback: T): T {
 }
 
 function saveToStorage<T>(key: string, value: T): void {
+  if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value));
   } catch (e) {
@@ -101,47 +103,97 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [isDoctorInfoOpen, setIsDoctorInfoOpen] = useState(false);
 
-  // Quick Drug Presets (Pharmacopoeia)
-  const [quickDrugPresets, setQuickDrugPresets] = useState<PrescriptionMedicine[]>(() =>
-    loadFromStorage('quick_drug_presets', DEFAULT_DRUG_PRESETS)
-  );
+  // Hydration state tracking
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Staff Users & Auth State
-  const [staffUsers, setStaffUsers] = useState<StaffUser[]>(() =>
-    loadFromStorage('staff_users', INITIAL_STAFF_USERS)
-  );
-  const [currentStaffUser, setCurrentStaffUser] = useState<StaffUser | null>(() =>
-    loadFromStorage('current_session', null)
-  );
+  // Initial state matches server-rendered defaults to ensure perfect hydration
+  const [quickDrugPresets, setQuickDrugPresets] = useState<PrescriptionMedicine[]>(DEFAULT_DRUG_PRESETS);
+  const [staffUsers, setStaffUsers] = useState<StaffUser[]>(INITIAL_STAFF_USERS);
+  const [currentStaffUser, setCurrentStaffUser] = useState<StaffUser | null>(null);
+  const [doctors, setDoctors] = useState<Doctor[]>(INITIAL_DOCTORS);
+  const [appointments, setAppointments] = useState<Appointment[]>(INITIAL_APPOINTMENTS);
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [reviews, setReviews] = useState<PatientReview[]>(INITIAL_REVIEWS);
 
-  // Doctors
-  const [doctors, setDoctors] = useState<Doctor[]>(() =>
-    loadFromStorage('doctors', INITIAL_DOCTORS)
-  );
+  // Load persisted state from localStorage ONCE after mount (client-side only, post-hydration)
+  useEffect(() => {
+    try {
+      const savedStaff = loadFromStorage<StaffUser[] | null>('staff_users', null);
+      if (savedStaff) {
+        const migratedStaff = savedStaff.map((staff) =>
+          staff.id === 'user-doc-1' && staff.avatar.includes('images.unsplash.com')
+            ? { ...staff, avatar: '/doc_img.jpeg' }
+            : staff
+        );
+        setStaffUsers(migratedStaff);
+      }
 
-  // Appointments
-  const [appointments, setAppointments] = useState<Appointment[]>(() =>
-    loadFromStorage('appointments', INITIAL_APPOINTMENTS)
-  );
+      const savedSession = loadFromStorage<StaffUser | null>('current_session', null);
+      if (savedSession) setCurrentStaffUser(savedSession);
 
-  // Prescriptions
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>(() =>
-    loadFromStorage('prescriptions', [])
-  );
+      const savedDoctors = loadFromStorage<Doctor[] | null>('doctors', null);
+      if (savedDoctors) {
+        const migratedDoctors = savedDoctors.map((doc) =>
+          doc.id === 'doc-abhishek' && doc.avatar.includes('images.unsplash.com')
+            ? { ...doc, avatar: '/doc_img.jpeg' }
+            : doc
+        );
+        setDoctors(migratedDoctors);
+      }
 
-  // Reviews
-  const [reviews, setReviews] = useState<PatientReview[]>(() =>
-    loadFromStorage('reviews', INITIAL_REVIEWS)
-  );
+      const savedAppointments = loadFromStorage<Appointment[] | null>('appointments', null);
+      if (savedAppointments) setAppointments(savedAppointments);
 
-  // Save to storage
-  useEffect(() => saveToStorage('staff_users', staffUsers), [staffUsers]);
-  useEffect(() => saveToStorage('current_session', currentStaffUser), [currentStaffUser]);
-  useEffect(() => saveToStorage('doctors', doctors), [doctors]);
-  useEffect(() => saveToStorage('appointments', appointments), [appointments]);
-  useEffect(() => saveToStorage('prescriptions', prescriptions), [prescriptions]);
-  useEffect(() => saveToStorage('quick_drug_presets', quickDrugPresets), [quickDrugPresets]);
-  useEffect(() => saveToStorage('reviews', reviews), [reviews]);
+      const savedPrescriptions = loadFromStorage<Prescription[] | null>('prescriptions', null);
+      if (savedPrescriptions) setPrescriptions(savedPrescriptions);
+
+      const savedPresets = loadFromStorage<PrescriptionMedicine[] | null>('quick_drug_presets', null);
+      if (savedPresets) setQuickDrugPresets(savedPresets);
+
+      const savedReviews = loadFromStorage<PatientReview[] | null>('reviews', null);
+      if (savedReviews) setReviews(savedReviews);
+    } catch (e) {
+      console.warn('Error loading persisted clinic data:', e);
+    } finally {
+      setIsInitialized(true);
+    }
+  }, []);
+
+  // Save to storage ONLY AFTER initialization is complete to protect existing persisted data
+  useEffect(() => {
+    if (!isInitialized) return;
+    saveToStorage('staff_users', staffUsers);
+  }, [staffUsers, isInitialized]);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+    saveToStorage('current_session', currentStaffUser);
+  }, [currentStaffUser, isInitialized]);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+    saveToStorage('doctors', doctors);
+  }, [doctors, isInitialized]);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+    saveToStorage('appointments', appointments);
+  }, [appointments, isInitialized]);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+    saveToStorage('prescriptions', prescriptions);
+  }, [prescriptions, isInitialized]);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+    saveToStorage('quick_drug_presets', quickDrugPresets);
+  }, [quickDrugPresets, isInitialized]);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+    saveToStorage('reviews', reviews);
+  }, [reviews, isInitialized]);
 
   // Auth Methods
   const login = (username: string, password: string): { success: boolean; requireNewPassword?: boolean; error?: string } => {

@@ -37,13 +37,14 @@ export const AddReviewModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in">
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md max-h-[92vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="bg-slate-900 text-white p-6 relative">
+        <div className="bg-slate-900 text-white p-5 sm:p-6 relative shrink-0">
+          <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-2.5 block sm:hidden" />
           <button
             onClick={handleClose}
-            className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="absolute top-4 sm:top-5 right-4 sm:right-5 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -51,14 +52,14 @@ export const AddReviewModal: React.FC = () => {
             <Star className="w-3.5 h-3.5 fill-amber-400" />
             <span>Patient Feedback</span>
           </div>
-          <h3 className="text-xl font-bold text-white">Share Your Smile Experience</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-white">Share Your Smile Experience</h3>
           <p className="text-xs text-slate-300 mt-0.5">
             Your review helps other patients choose the right dental care.
           </p>
         </div>
 
         {isSuccess ? (
-          <div className="p-8 text-center space-y-4">
+          <div className="p-6 sm:p-8 text-center space-y-4 overflow-y-auto flex-1">
             <div className="w-16 h-16 rounded-full bg-emerald-100 border-4 border-emerald-50 text-emerald-600 flex items-center justify-center mx-auto animate-bounce">
               <CheckCircle2 className="w-8 h-8" />
             </div>
@@ -70,13 +71,13 @@ export const AddReviewModal: React.FC = () => {
             </div>
             <button
               onClick={handleClose}
-              className="w-full py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs shadow-md hover:bg-slate-800 transition-colors"
+              className="w-full py-3 rounded-xl bg-slate-900 text-white font-bold text-xs shadow-md hover:bg-slate-800 transition-colors active:scale-95 touch-manipulation cursor-pointer"
             >
               Done
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
+          <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-3.5 text-xs overflow-y-auto flex-1">
             {/* Rating Stars */}
             <div>
               <label className="font-bold text-slate-700 block mb-1">Your Rating</label>
@@ -86,7 +87,7 @@ export const AddReviewModal: React.FC = () => {
                     key={star}
                     type="button"
                     onClick={() => setRating(star)}
-                    className="p-1 focus:outline-hidden"
+                    className="p-1 focus:outline-hidden active:scale-90 transition-transform touch-manipulation"
                   >
                     <Star
                       className={`w-7 h-7 transition-colors ${
@@ -107,14 +108,14 @@ export const AddReviewModal: React.FC = () => {
             <div>
               <label className="font-bold text-slate-700 block mb-1">Your Name *</label>
               <div className="relative">
-                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 sm:top-3" />
                 <input
                   type="text"
                   required
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
                   placeholder="e.g. Meera Joshi"
-                  className="w-full pl-10 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-sky-500 focus:outline-hidden"
+                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-sky-500 focus:outline-hidden text-base sm:text-xs"
                 />
               </div>
             </div>
@@ -127,7 +128,7 @@ export const AddReviewModal: React.FC = () => {
                 value={treatment}
                 onChange={(e) => setTreatment(e.target.value)}
                 placeholder="e.g. Root Canal, Teeth Whitening, Braces"
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-sky-500 focus:outline-hidden"
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-sky-500 focus:outline-hidden text-base sm:text-xs"
               />
             </div>
 
@@ -140,13 +141,13 @@ export const AddReviewModal: React.FC = () => {
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Share your experience with Dr. Abhishek V. Kamble and Classic Smile Dental Care..."
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-sky-500 focus:outline-hidden leading-relaxed"
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-sky-500 focus:outline-hidden leading-relaxed text-base sm:text-xs"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md transition-colors flex items-center justify-center space-x-2"
+              className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs sm:text-sm shadow-md transition-all active:scale-95 touch-manipulation flex items-center justify-center space-x-2 mt-2"
             >
               <span>Submit Verified Review</span>
               <ArrowRight className="w-4 h-4" />

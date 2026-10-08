@@ -76,36 +76,39 @@ export const DoctorInfoPage: React.FC = () => {
       </div>
 
       {/* Main Profile Hero Card */}
-      <section className="bg-slate-950 text-white rounded-3xl p-6 sm:p-12 border border-slate-800 shadow-2xl relative overflow-hidden">
+      <section className="bg-slate-950 text-white rounded-3xl p-5 sm:p-12 border border-slate-800 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-teal-500/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-sky-500/15 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
           {/* Portrait */}
           <div className="lg:col-span-5 flex justify-center">
-            <div className="relative max-w-sm w-full bg-slate-900 p-3 rounded-3xl border border-slate-800 shadow-2xl">
-              <div className="h-80 sm:h-96 rounded-2xl overflow-hidden relative">
+            <div className="relative max-w-xs sm:max-w-sm w-full bg-slate-900 p-3 rounded-3xl border border-slate-800 shadow-2xl">
+              <div className="h-72 sm:h-96 rounded-2xl overflow-hidden relative">
                 <img
-                  src={doctor?.avatar}
-                  alt={doctor?.name}
+                  src={doctor?.avatar && !doctor.avatar.includes('images.unsplash.com') ? doctor.avatar : '/doc_img.jpeg'}
+                  alt={doctor?.name || 'Dr. Abhishek V. Kamble'}
                   className="w-full h-full object-cover object-top"
+                  onError={(e) => {
+                    e.currentTarget.src = '/doc_img.jpeg';
+                  }}
                 />
                 <div className="absolute bottom-0 inset-x-0 bg-linear-to-t from-slate-950 via-slate-950/80 to-transparent p-4 text-white">
                   <span className="text-[10px] font-bold text-teal-400 uppercase tracking-widest block">
                     Chief Periodontist & Implantologist
                   </span>
-                  <strong className="text-xl font-bold block">{doctor?.name}</strong>
+                  <strong className="text-lg sm:text-xl font-bold block">{doctor?.name}</strong>
                   <span className="text-xs text-slate-300 block">{doctor?.qualification}</span>
                 </div>
               </div>
 
               {/* Council badge */}
-              <div className="mt-3 p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                <div className="flex items-center space-x-2 text-slate-300">
-                  <Award className="w-4 h-4 text-teal-400" />
-                  <span className="font-mono text-[11px]">Reg: {doctor?.registration || 'A-43344'}</span>
+              <div className="mt-3 p-2.5 sm:p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                <div className="flex items-center space-x-1.5 text-slate-300">
+                  <Award className="w-4 h-4 text-teal-400 shrink-0" />
+                  <span className="font-mono text-[10px] sm:text-[11px]">Reg: {doctor?.registration || 'A-43344'}</span>
                 </div>
-                <span className="text-[10px] uppercase font-bold text-teal-400 bg-teal-950/80 px-2 py-0.5 rounded-full border border-teal-500/30">
+                <span className="text-[9px] sm:text-[10px] uppercase font-bold text-teal-400 bg-teal-950/80 px-2 py-0.5 rounded-full border border-teal-500/30">
                   MDC Registered
                 </span>
               </div>
@@ -113,17 +116,17 @@ export const DoctorInfoPage: React.FC = () => {
           </div>
 
           {/* Biography and Accolades */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-teal-300 text-xs font-bold uppercase tracking-wider">
+          <div className="lg:col-span-7 space-y-4 sm:space-y-6">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-teal-300 text-[11px] sm:text-xs font-bold uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Lead Specialist • Classic Smile Dental Care</span>
+              <span>Lead Specialist • Classic Smile</span>
             </div>
 
             <div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-black tracking-tight text-white">
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-black tracking-tight text-white">
                 {doctor?.name}
               </h1>
-              <p className="text-teal-300 font-semibold text-base sm:text-lg mt-1">
+              <p className="text-teal-300 font-semibold text-sm sm:text-lg mt-1">
                 {doctor?.qualification} — {doctor?.specialization}
               </p>
               <p className="text-xs text-slate-400 font-mono mt-0.5">
@@ -135,49 +138,50 @@ export const DoctorInfoPage: React.FC = () => {
               Dr. Abhishek V. Kamble is a distinguished Periodontist and Oral Implantologist practicing in Charholi Budruk, Pimpri-Chinchwad, Pune. With extensive postgraduate surgical training (BDS, MDS), Dr. Abhishek specializes in regenerative gum surgeries, dental implantology, bone augmentation, and complete multispeciality smile rehabilitation.
             </p>
 
-            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-800/80">
-              <div>
-                <strong className="text-2xl sm:text-3xl font-black text-white block">12+</strong>
-                <span className="text-[11px] text-slate-400 uppercase font-semibold">Years Experience</span>
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-4 border-t border-slate-800/80 text-center sm:text-left">
+              <div className="p-2 sm:p-0 bg-slate-900/60 sm:bg-transparent rounded-xl">
+                <strong className="text-xl sm:text-3xl font-black text-white block">12+</strong>
+                <span className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold block">Years Exp</span>
               </div>
-              <div>
-                <strong className="text-2xl sm:text-3xl font-black text-teal-400 block">4.9</strong>
-                <span className="text-[11px] text-slate-400 uppercase font-semibold">Patient Rating</span>
+              <div className="p-2 sm:p-0 bg-slate-900/60 sm:bg-transparent rounded-xl">
+                <strong className="text-xl sm:text-3xl font-black text-teal-400 block">4.9</strong>
+                <span className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold block">Rating</span>
               </div>
-              <div>
-                <strong className="text-2xl sm:text-3xl font-black text-amber-400 block">150+</strong>
-                <span className="text-[11px] text-slate-400 uppercase font-semibold">Google Reviews</span>
+              <div className="p-2 sm:p-0 bg-slate-900/60 sm:bg-transparent rounded-xl">
+                <strong className="text-xl sm:text-3xl font-black text-amber-400 block">150+</strong>
+                <span className="text-[10px] sm:text-[11px] text-slate-400 uppercase font-semibold block">Reviews</span>
               </div>
             </div>
 
             {/* CTAs */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+            <div className="space-y-2.5 pt-1 sm:pt-2">
               <button
                 onClick={() => setIsBookingModalOpen(true)}
-                className="px-6 py-3.5 rounded-2xl bg-linear-to-r from-teal-500 to-sky-500 hover:from-teal-600 hover:to-sky-600 text-white font-bold text-xs sm:text-sm shadow-xl shadow-teal-500/20 hover:scale-105 transition-all flex items-center space-x-2 cursor-pointer"
+                className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-linear-to-r from-teal-500 to-sky-500 hover:from-teal-600 hover:to-sky-600 text-white font-bold text-xs sm:text-sm shadow-xl shadow-teal-500/20 active:scale-95 transition-all flex items-center justify-center space-x-2 cursor-pointer"
               >
                 <Calendar className="w-4 h-4" />
                 <span>Book Consultation with Dr. Abhishek</span>
               </button>
 
-              <a
-                href={`tel:${clinicInfo.phone.replace(/\s+/g, '')}`}
-                className="px-5 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-semibold text-xs sm:text-sm transition-colors flex items-center space-x-2"
-              >
-                <Phone className="w-4 h-4 text-teal-400" />
-                <span>{clinicInfo.phone}</span>
-              </a>
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
+                <a
+                  href={`tel:${clinicInfo.phone.replace(/[^0-9+]/g, '')}`}
+                  className="px-3.5 py-2.5 sm:px-5 sm:py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-semibold text-xs sm:text-sm transition-colors flex items-center justify-center space-x-2 active:scale-95"
+                >
+                  <Phone className="w-4 h-4 text-teal-400 shrink-0" />
+                  <span className="truncate">{clinicInfo.phone}</span>
+                </a>
 
-              <a
-                href={`https://instagram.com/${clinicInfo.doctorInstagram.replace('@', '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-pink-300 border border-slate-700 font-semibold text-xs transition-colors flex items-center space-x-2"
-              >
-                <InstagramIcon className="w-4 h-4 text-pink-400" />
-                <span>{clinicInfo.doctorInstagram}</span>
-                <ExternalLink className="w-3 h-3 text-slate-400" />
-              </a>
+                <a
+                  href={`https://instagram.com/${clinicInfo.doctorInstagram.replace('@', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-2.5 sm:px-4 sm:py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-pink-300 border border-slate-700 font-semibold text-xs transition-colors flex items-center justify-center space-x-1.5 active:scale-95"
+                >
+                  <InstagramIcon className="w-4 h-4 text-pink-400 shrink-0" />
+                  <span className="truncate">{clinicInfo.doctorInstagram}</span>
+                </a>
+              </div>
             </div>
           </div>
         </div>

@@ -233,25 +233,25 @@ export const ReceptionDashboard: React.FC = () => {
       </div>
 
       {/* Control Bar: Search, Status Filter, Walk-In Button */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center space-x-3 flex-1 min-w-[280px]">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-1">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3.5 sm:top-3" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search patient name, phone, or service..."
-              className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-hidden"
+              placeholder="Search patient name, phone, service..."
+              className="w-full pl-9 pr-3 py-2.5 sm:py-2 text-base sm:text-xs bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-hidden"
             />
           </div>
 
           <div className="flex items-center space-x-1.5">
-            <Filter className="w-4 h-4 text-slate-400" />
+            <Filter className="w-4 h-4 text-slate-400 shrink-0" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="text-xs font-semibold bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-700"
+              className="w-full sm:w-auto text-base sm:text-xs font-semibold bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 sm:py-2 text-slate-700"
             >
               <option value="all">All Appointments ({appointments.length})</option>
               <option value="pending">Pending Confirmation ({countPending})</option>
@@ -266,23 +266,156 @@ export const ReceptionDashboard: React.FC = () => {
 
         <button
           onClick={() => setIsRegisterOpen(true)}
-          className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
+          className="flex items-center justify-center space-x-2 px-4 py-3 sm:py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer active:scale-95 touch-manipulation"
         >
           <UserPlus className="w-4 h-4" />
           <span>+ Register Walk-In Patient</span>
         </button>
       </div>
 
-      {/* Queue Table */}
+      {/* Queue Table for Desktop & Responsive Cards for Mobile */}
       <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 flex items-center justify-between">
           <h3 className="font-bold text-sm text-slate-800">
-            Today's Front-Desk Schedule ({filteredAppointments.length})
+            Schedule Queue ({filteredAppointments.length})
           </h3>
-          <span className="text-xs text-slate-500">{clinicInfo.name}</span>
+          <span className="text-xs text-slate-500 truncate max-w-[140px] sm:max-w-none">{clinicInfo.name}</span>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Mobile Cards (Visible on screens < 768px) */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {filteredAppointments.length === 0 ? (
+            <div className="px-4 py-8 text-center text-slate-400 text-xs">
+              No appointments found matching your filter.
+            </div>
+          ) : (
+            filteredAppointments.map((apt) => {
+              const doc = doctors.find((d) => d.id === apt.doctorId) || doctors[0];
+              return (
+                <div key={apt.id} className="p-4 space-y-3 bg-white">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-900 text-sm flex items-center space-x-1.5">
+                      <Clock className="w-3.5 h-3.5 text-teal-600" />
+                      <span>{apt.time}</span>
+                    </span>
+                    <div>{getStatusBadge(apt.status)}</div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-baseline justify-between">
+                      <strong className="text-slate-900 font-bold text-sm">{apt.patientName}</strong>
+                      <a
+                        href={`tel:${apt.patientPhone.replace(/[^0-9+]/g, '')}`}
+                        className="text-xs text-teal-700 font-bold flex items-center space-x-1 active:scale-95 touch-manipulation"
+                      >
+                        <Phone className="w-3 h-3 text-teal-600" />
+                        <span>{apt.patientPhone}</span>
+                      </a>
+                    </div>
+                    <p className="text-xs text-slate-700 font-medium mt-0.5">{apt.service}</p>
+                    {apt.notes && (
+                      <p className="text-[11px] text-slate-500 italic mt-1 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                        "{apt.notes}"
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                    <span className="text-[11px] text-slate-500">{apt.doctorName}</span>
+                    <div className="flex items-center space-x-1.5 flex-wrap gap-y-1 justify-end">
+                      <button
+                        onClick={() => {
+                          downloadAppointmentReceiptImage({
+                            patientName: apt.patientName,
+                            patientPhone: apt.patientPhone,
+                            doctorName: doc?.name || 'Dr. Abhishek V. Kamble',
+                            doctorQualification: doc?.qualification || 'BDS, MDS',
+                            doctorSpecialization: doc?.specialization || 'Periodontist & Oral Implantologist',
+                            doctorRegistration: doc?.registration || 'A-43344',
+                            service: apt.service,
+                            date: apt.date,
+                            time: apt.time,
+                            referenceId: apt.id,
+                            clinicName: clinicInfo.name,
+                            clinicTagline: clinicInfo.tagline,
+                            clinicAddress: clinicInfo.address,
+                            clinicCity: clinicInfo.city,
+                            clinicPhone: clinicInfo.phone,
+                            clinicSecondaryPhone: clinicInfo.secondaryPhone,
+                          });
+                        }}
+                        className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-teal-700"
+                        title="Download Pass"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+
+                      {apt.status === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => updateAppointmentStatus(apt.id, 'confirmed')}
+                            className="px-3 py-1.5 rounded-lg bg-teal-600 text-white font-bold text-xs shadow-xs active:scale-95"
+                          >
+                            Confirm
+                          </button>
+                          <button
+                            onClick={() => updateAppointmentStatus(apt.id, 'cancelled')}
+                            className="px-2.5 py-1.5 rounded-lg border border-rose-200 text-rose-600 font-bold text-xs"
+                          >
+                            Reject
+                          </button>
+                        </>
+                      )}
+
+                      {apt.status !== 'completed' && apt.status !== 'cancelled' && (
+                        <button
+                          onClick={() => {
+                            setRescheduleTarget(apt);
+                            setRescheduleDate(apt.date);
+                            setRescheduleSlot(apt.time);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg border border-slate-300 text-slate-700 font-bold text-xs active:scale-95"
+                        >
+                          Reschedule
+                        </button>
+                      )}
+
+                      {(apt.status === 'confirmed' || apt.status === 'scheduled') && (
+                        <button
+                          onClick={() => updateAppointmentStatus(apt.id, 'checked-in')}
+                          className="px-3 py-1.5 rounded-lg bg-sky-600 text-white font-bold text-xs shadow-xs active:scale-95"
+                        >
+                          Check In
+                        </button>
+                      )}
+
+                      {apt.status === 'checked-in' && (
+                        <button
+                          onClick={() => updateAppointmentStatus(apt.id, 'in-chair')}
+                          className="px-3 py-1.5 rounded-lg bg-purple-600 text-white font-bold text-xs shadow-xs active:scale-95"
+                        >
+                          To Chair
+                        </button>
+                      )}
+
+                      {apt.status === 'in-chair' && (
+                        <button
+                          onClick={() => updateAppointmentStatus(apt.id, 'completed')}
+                          className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold text-xs shadow-xs active:scale-95"
+                        >
+                          Done
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop Table (Hidden on screens < 768px) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200">
               <tr>
@@ -443,10 +576,11 @@ export const ReceptionDashboard: React.FC = () => {
 
       {/* Fast Walk-In Registration Modal with Slot Selection */}
       {isRegisterOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden">
-            <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden">
+            <div className="bg-slate-900 text-white p-5 flex items-center justify-between shrink-0">
               <div>
+                <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-2 block sm:hidden" />
                 <h3 className="font-bold text-sm text-white">Book & Register Patient at Reception</h3>
                 <p className="text-[11px] text-slate-400 mt-0.5">Select preferred date & operatory time slot</p>
               </div>
@@ -458,7 +592,7 @@ export const ReceptionDashboard: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleRegisterWalkIn} className="p-6 space-y-4 text-xs max-h-[85vh] overflow-y-auto">
+            <form onSubmit={handleRegisterWalkIn} className="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto flex-1">
               {/* Date & Slot selection */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -469,7 +603,7 @@ export const ReceptionDashboard: React.FC = () => {
                     min={getLocalDateString()}
                     value={walkinDate}
                     onChange={(e) => setWalkinDate(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-base sm:text-xs"
                   />
                 </div>
 
@@ -605,10 +739,11 @@ export const ReceptionDashboard: React.FC = () => {
 
       {/* Reschedule Appointment Modal */}
       {rescheduleTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
-            <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md max-h-[92vh] flex flex-col overflow-hidden">
+            <div className="bg-slate-900 text-white p-5 flex items-center justify-between shrink-0">
               <div>
+                <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-2 block sm:hidden" />
                 <h3 className="font-bold text-sm text-white">Reschedule Appointment</h3>
                 <p className="text-[11px] text-slate-400 mt-0.5">
                   Patient: {rescheduleTarget.patientName} ({rescheduleTarget.patientPhone})
@@ -623,7 +758,7 @@ export const ReceptionDashboard: React.FC = () => {
             </div>
 
             {rescheduleSuccess ? (
-              <div className="p-8 text-center space-y-3">
+              <div className="p-6 sm:p-8 text-center space-y-3 overflow-y-auto flex-1">
                 <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto animate-bounce">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
@@ -633,7 +768,7 @@ export const ReceptionDashboard: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleConfirmReschedule} className="p-6 space-y-4 text-xs">
+              <form onSubmit={handleConfirmReschedule} className="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto flex-1">
                 {/* Current Info */}
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-600 space-y-1">
                   <p><strong>Current Slot:</strong> {rescheduleTarget.date} at {rescheduleTarget.time}</p>
@@ -649,7 +784,7 @@ export const ReceptionDashboard: React.FC = () => {
                     min={getLocalDateString()}
                     value={rescheduleDate}
                     onChange={(e) => setRescheduleDate(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-base sm:text-xs"
                   />
                 </div>
 

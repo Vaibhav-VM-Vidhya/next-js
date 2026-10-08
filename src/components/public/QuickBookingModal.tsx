@@ -37,20 +37,10 @@ export const QuickBookingModal: React.FC = () => {
   const [bookedApt, setBookedApt] = useState<Appointment | null>(null);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
 
-  if (!isBookingModalOpen) return null;
-
-  const quickServices = [
-    'Dental Implants & Oral Implantology',
-    'Periodontal / Gum Treatment',
-    'Root Canal Treatment (RCT)',
-    'General Dentistry & Checkup',
-    'Multispeciality Dental Care',
-    'Restorative & Cosmetic Dentistry',
-    'Teeth Cleaning & Polishing',
-  ];
-
-  // Auto-pick first available valid slot when date changes
+  // Auto-pick first available valid slot when date changes or modal opens
   useEffect(() => {
+    if (!isBookingModalOpen) return;
+
     const isCurrentSlotInvalid =
       isTimeSlotPassedForToday(time, date) || isSlotBooked(time, date, appointments);
 
@@ -62,7 +52,19 @@ export const QuickBookingModal: React.FC = () => {
         setTime(firstAvailable);
       }
     }
-  }, [date, appointments]);
+  }, [date, appointments, isBookingModalOpen, time]);
+
+  if (!isBookingModalOpen) return null;
+
+  const quickServices = [
+    'Dental Implants & Oral Implantology',
+    'Periodontal / Gum Treatment',
+    'Root Canal Treatment (RCT)',
+    'General Dentistry & Checkup',
+    'Multispeciality Dental Care',
+    'Restorative & Cosmetic Dentistry',
+    'Teeth Cleaning & Polishing',
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,13 +150,14 @@ export const QuickBookingModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in">
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md max-h-[92vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="bg-linear-to-r from-slate-900 to-sky-950 text-white p-6 relative">
+        <div className="bg-linear-to-r from-slate-900 to-sky-950 text-white p-5 sm:p-6 relative shrink-0">
+          <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-2.5 block sm:hidden" />
           <button
             onClick={handleClose}
-            className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="absolute top-4 sm:top-5 right-4 sm:right-5 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -162,14 +165,14 @@ export const QuickBookingModal: React.FC = () => {
             <Sparkles className="w-3.5 h-3.5" />
             <span>Fast Appointment Desk</span>
           </div>
-          <h3 className="text-xl font-bold text-white">Book Your Dental Visit</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-white">Book Your Dental Visit</h3>
           <p className="text-xs text-slate-300 mt-0.5">
             Confirmed directly with Dr. Abhishek V. Kamble's clinic desk.
           </p>
         </div>
 
         {isSuccess ? (
-          <div className="p-6 sm:p-8 text-center space-y-4">
+          <div className="p-5 sm:p-8 text-center space-y-4 overflow-y-auto flex-1">
             <div className="w-14 h-14 rounded-full bg-emerald-100 border-4 border-emerald-50 text-emerald-600 flex items-center justify-center mx-auto animate-bounce">
               <CheckCircle2 className="w-8 h-8" />
             </div>
@@ -226,7 +229,7 @@ export const QuickBookingModal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleManualDownload}
-                className="w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-md transition-colors flex items-center justify-center space-x-2 cursor-pointer"
+                className="w-full py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-md transition-colors flex items-center justify-center space-x-2 cursor-pointer active:scale-95 touch-manipulation"
               >
                 <Download className="w-4 h-4" />
                 <span>Download Receipt Image Again (PNG)</span>
@@ -235,21 +238,21 @@ export const QuickBookingModal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleClose}
-                className="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors cursor-pointer active:scale-95"
               >
                 Close & Return
               </button>
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
+          <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-3.5 text-xs overflow-y-auto flex-1">
             {/* Service Selection */}
             <div>
               <label className="font-bold text-slate-700 block mb-1">Treatment / Reason *</label>
               <select
                 value={service}
                 onChange={(e) => setService(e.target.value)}
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-sky-500 focus:outline-hidden"
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-sky-500 focus:outline-hidden text-base sm:text-xs"
               >
                 {quickServices.map((s, i) => (
                   <option key={i} value={s}>
@@ -260,7 +263,7 @@ export const QuickBookingModal: React.FC = () => {
             </div>
 
             {/* Date and Time */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="font-bold text-slate-700 block mb-1">Preferred Date *</label>
                 <input
@@ -269,7 +272,7 @@ export const QuickBookingModal: React.FC = () => {
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                   min={getLocalDateString()}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-base sm:text-xs"
                 />
               </div>
               <div>
@@ -277,7 +280,7 @@ export const QuickBookingModal: React.FC = () => {
                 <select
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-teal-500 focus:outline-hidden text-base sm:text-xs"
                 >
                   {CLINIC_TIME_SLOTS.map((ts) => {
                     const isPast = isTimeSlotPassedForToday(ts, date);
@@ -298,14 +301,14 @@ export const QuickBookingModal: React.FC = () => {
             <div>
               <label className="font-bold text-slate-700 block mb-1">Your Full Name *</label>
               <div className="relative">
-                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 sm:top-3" />
                 <input
                   type="text"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Rahul Patil"
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-sky-500 focus:outline-hidden"
+                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-sky-500 focus:outline-hidden text-base sm:text-xs"
                 />
               </div>
             </div>
@@ -314,21 +317,21 @@ export const QuickBookingModal: React.FC = () => {
             <div>
               <label className="font-bold text-slate-700 block mb-1">Phone / WhatsApp Number *</label>
               <div className="relative">
-                <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 sm:top-3" />
                 <input
                   type="tel"
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+91 98000 00000"
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-sky-500 focus:outline-hidden"
+                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-sky-500 focus:outline-hidden text-base sm:text-xs"
                 />
               </div>
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-linear-to-r from-sky-600 to-teal-600 hover:from-sky-700 hover:to-teal-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center space-x-2"
+              className="w-full py-3 rounded-xl bg-linear-to-r from-sky-600 to-teal-600 hover:from-sky-700 hover:to-teal-700 text-white font-bold text-xs sm:text-sm shadow-md active:scale-95 transition-all flex items-center justify-center space-x-2 cursor-pointer touch-manipulation mt-2"
             >
               <span>Confirm Appointment (No Advance Fee)</span>
               <ArrowRight className="w-4 h-4" />
