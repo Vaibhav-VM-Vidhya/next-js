@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Lock, User, KeyRound, ShieldCheck, X, AlertCircle, ArrowRight } from 'lucide-react';
+import { Lock, User, KeyRound, ShieldCheck, X, AlertCircle, ArrowRight, Stethoscope, ClipboardList } from 'lucide-react';
 
 export const LoginModal: React.FC = () => {
-  const { isLoginModalOpen, setIsLoginModalOpen, login, completeFirstTimePassword } = useApp();
+  const { isLoginModalOpen, setIsLoginModalOpen, login, demoLogin, completeFirstTimePassword } = useApp();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -55,6 +55,7 @@ export const LoginModal: React.FC = () => {
 
     completeFirstTimePassword(username, newPassword);
     setIsSettingNewPassword(false);
+    setIsLoginModalOpen(false);
     setUsername('');
     setPassword('');
     setNewPassword('');
@@ -138,27 +139,43 @@ export const LoginModal: React.FC = () => {
               </div>
             </div>
 
-            {/* Quick Demo Helper Hint */}
-            <div className="p-3 bg-sky-50/70 border border-sky-100 rounded-xl text-[11px] text-sky-900 space-y-1">
-              <strong className="block font-bold text-sky-800">Initial Default Credentials:</strong>
-              <div className="flex justify-between">
-                <span>Doctor: <code className="font-mono font-bold">doctor</code></span>
-                <span>Default Pass: <code className="font-mono font-bold">admin1234</code></span>
+            {/* Quick Demo 1-Tap Access (Perfect for Client Demo) */}
+            <div className="p-3 bg-teal-50/80 border border-teal-200/80 rounded-2xl space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-teal-900 uppercase tracking-wide">
+                  Instant Demo Access
+                </span>
+                <span className="text-[10px] text-teal-700 font-semibold">1-tap client preview</span>
               </div>
-              <div className="flex justify-between">
-                <span>Reception: <code className="font-mono font-bold">receptionist</code></span>
-                <span>Default Pass: <code className="font-mono font-bold">admin1234</code></span>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => demoLogin('doctor')}
+                  className="py-2 px-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-xs active:scale-95 cursor-pointer touch-manipulation"
+                >
+                  <Stethoscope className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">Doctor Console</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => demoLogin('receptionist')}
+                  className="py-2 px-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-xs active:scale-95 cursor-pointer touch-manipulation"
+                >
+                  <ClipboardList className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">Reception Desk</span>
+                </button>
               </div>
-              <p className="text-[10px] text-slate-500 italic mt-0.5">
-                (On first login with default pass, you will create your private password)
-              </p>
+              <div className="text-[10px] text-slate-500 flex justify-between px-0.5 pt-0.5">
+                <span>Pass: <code className="font-mono font-bold text-slate-700">admin1234</code></span>
+                <span>User: <code className="font-mono font-bold text-slate-700">doctor / receptionist</code></span>
+              </div>
             </div>
 
             <button
               type="submit"
               className="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all active:scale-95 touch-manipulation flex items-center justify-center space-x-2 mt-2"
             >
-              <span>Login to Workspace</span>
+              <span>Login with Credentials</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>

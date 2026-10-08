@@ -30,6 +30,11 @@ export const Navbar: React.FC = () => {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Automatically close mobile menu when navigating or logging in/out
+  React.useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [activeView, currentStaffUser]);
+
   return (
     <header className="no-print bg-slate-950 text-white sticky top-0 z-40 shadow-xl border-b border-slate-800">
       {/* Top Clinical Announcement Strip (desktop only to preserve mobile screen height) */}

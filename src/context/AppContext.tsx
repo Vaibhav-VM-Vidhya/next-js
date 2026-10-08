@@ -32,6 +32,7 @@ interface AppContextType {
   // Staff Authentication
   currentStaffUser: StaffUser | null;
   login: (username: string, password: string) => { success: boolean; requireNewPassword?: boolean; error?: string };
+  demoLogin: (role: 'doctor' | 'receptionist') => void;
   completeFirstTimePassword: (username: string, newPassword: string) => void;
   logout: () => void;
 
@@ -228,6 +229,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true };
   };
 
+  const demoLogin = (role: 'doctor' | 'receptionist') => {
+    const user = staffUsers.find((u) => u.role === role);
+    if (user) {
+      setCurrentStaffUser(user);
+      setIsLoginModalOpen(false);
+      if (role === 'doctor') {
+        setActiveView('doctor-chair');
+      } else {
+        setActiveView('reception-desk');
+      }
+    }
+  };
+
   const completeFirstTimePassword = (username: string, newPassword: string) => {
     setStaffUsers((prev) =>
       prev.map((u) => {
@@ -380,6 +394,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         clinicInfo,
         currentStaffUser,
         login,
+        demoLogin,
         completeFirstTimePassword,
         logout,
         doctors,
