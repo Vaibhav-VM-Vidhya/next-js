@@ -31,8 +31,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="bg-slate-50 text-slate-800 antialiased font-sans">
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className="bg-slate-50 text-slate-800 antialiased font-sans"
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>
